@@ -26,7 +26,7 @@ test('input_schema follows MIP-003 input_data format with stage and brief',async
  assert.deepEqual(Object.keys(body),['input_data']);
  const [stage,brief]=body.input_data;
  assert.equal(stage.id,'stage');assert.equal(stage.type,'option');assert.equal(typeof stage.name,'string');
- assert.deepEqual(stage.data.values,['create','schedule','engage','analyze','trends','scripts']);
+ assert.deepEqual(stage.data.values,['create','schedule','engage','analyze','trends','scripts','onboarding']);
  assert.deepEqual(stage.validations,[{validation:'min',value:'1'},{validation:'max',value:'1'}]);
  assert.equal(brief.id,'brief');assert.equal(brief.type,'textarea');assert.equal(typeof brief.name,'string');
  assert.ok(brief.validations.some(v=>v.validation==='max'&&v.value==='8000'));
@@ -48,7 +48,7 @@ test('input validation accepts stage forms and legacy prompt, rejects bad input'
  assert.equal(validateInputData({stage:['engage'],brief:'x'}),null);
  assert.equal(validateInputData({stage:[3],brief:'x'}),null);
  assert.equal(normalizeStage([3]),'analyze');assert.equal(normalizeStage('Create'),'create');
- assert.equal(normalizeStage('trends'),'trends');assert.equal(normalizeStage([5]),'scripts');assert.equal(normalizeStage([6]),null);
+ assert.equal(normalizeStage('trends'),'trends');assert.equal(normalizeStage([5]),'scripts');assert.equal(normalizeStage([6]),'onboarding');assert.equal(normalizeStage([7]),null);
  assert.equal(validateInputData({prompt:'legacy'}),null);
  assert.match(validateInputData({stage:'publish',brief:'x'}),/stage/);
  assert.match(validateInputData({stage:['create','engage'],brief:'x'}),/stage/);
