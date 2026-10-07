@@ -9,6 +9,7 @@ dependencies = [
     "langchain-core>=1.6.7",
     "langchain-openai>=1.6.7",
     "langgraph>=1.2.14",
+    "tzdata>=2024.1",
     "uvicorn[standard]>=0.54.0",
 ]
 

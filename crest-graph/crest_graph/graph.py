@@ -11,6 +11,7 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 
 from . import prompts
+from . import ig_workflows
 
 Stage = Literal["create", "schedule", "engage", "analyze"]
 STAGES: tuple[Stage, ...] = ("create", "schedule", "engage", "analyze")
@@ -67,14 +68,22 @@ def build_graph(model: BaseChatModel, checkpointer: BaseCheckpointSaver | None =
         content = ask(prompts.CONTENT, f"{brief(state)}\n\n---\n{state['persona']}")
         return {"sections": [*state["sections"], content]}
 
-    def scheduler_agent(state: CrestState) -> CrestState:
-        return {"sections": [ask(prompts.SCHEDULER, brief(state))]}
+    def scheduler_agent(state: CrestState, config=None) -> CrestState:
+        calendar = ask(prompts.SCHEDULER, brief(state))
+        queue = ig_workflows.queue_calendar(calendar, thread_id=ig_workflows.thread_id_of(config), persona=state.get("persona"))
+        return {"sections": [calendar, queue]}
 
-    def engage_agent(state: CrestState) -> CrestState:
-        return {"sections": [ask(prompts.ENGAGE, brief(state))]}
+    def engage_agent(state: CrestState, config=None) -> CrestState:
+        thread_id = ig_workflows.thread_id_of(config)
+        if ig_workflows.is_approval(brief(state)):
+            return {"sections": [ig_workflows.approve(brief(state), thread_id)]}
+        items = ig_workflows.fetch_inbox(thread_id)
+        triage = ask(prompts.ENGAGE, ig_workflows.engage_input(brief(state), items))
+        return {"sections": [triage, ig_workflows.record_drafts(triage, items, thread_id=thread_id)]}
 
     def analyst_agent(state: CrestState) -> CrestState:
-        return {"sections": [ask(prompts.ANALYST, brief(state))]}
+        data, source = ig_workflows.analyst_input(brief(state))
+        return {"sections": [ask(prompts.ANALYST, data), f"## Data source\n{source}"]}
 
     def finalize(state: CrestState) -> CrestState:
         header = f"# PersonaLab - {TITLES[state['stage']]}"
