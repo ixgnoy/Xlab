@@ -36,31 +36,37 @@ Payment event IDs:
 
 ## 2. Seller payment proof (Cardano Preprod)
 
-Quote: **1 test USDM** (`1000000` atomic units), escrowed in the Masumi V2 contract
-`addr_test1wzs4e6wc95hkwezlccjw9mdvq0r0rsgx6zk34avptga3ftgn37w4g`.
+**Confirmed payment transaction from our payment node (collection, `Withdrawn`):**
+[`ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3`](https://preprod.cardanoscan.io/transaction/ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3) — block 5264251, 2026-10-07 11:33:31 UTC.
+Signed by our Masumi payment node's selling wallet; it releases the escrowed **1 test USDM** to the seller address.
 
-| # | On-chain state | Transaction hash | Block | Time (UTC) | Explorer |
-|---|---|---|---|---|---|
-| 1 | FundsLocked (buyer escrows 1 tUSDM) | `ead8e54bfa59a7a0500ad6fa3914a606861a537b12dd4e612a2dbc89e69e019c` | 5264061 | 2026-10-07 10:28:55 | [cardanoscan](https://preprod.cardanoscan.io/transaction/ead8e54bfa59a7a0500ad6fa3914a606861a537b12dd4e612a2dbc89e69e019c) |
-| 2 | ResultSubmitted (seller submits result hash) | `02b70f55f770a25e2957c6b09dba25d1789de76518e6fbb27ed0b469dc3041b7` | 5264084 | 2026-10-07 10:38:46 | [cardanoscan](https://preprod.cardanoscan.io/transaction/02b70f55f770a25e2957c6b09dba25d1789de76518e6fbb27ed0b469dc3041b7) |
-| 3 | **Withdrawn — seller collection** | `ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3` | 5264251 | 2026-10-07 11:33:31 | [cardanoscan](https://preprod.cardanoscan.io/transaction/ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3) |
-
-All three are `Confirmed` on the payment node (MPS `resolve-blockchain-identifier`, final state `Withdrawn`).
+**Seller receipt:** `settled: true`, settlement `txHash: ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3`; payment node final state `Withdrawn`, with the escrow,
+result and collection transactions all `Confirmed` (MPS `resolve-blockchain-identifier`).
 
 | Seller proof field | Value |
 |---|---|
-| Confirmed collection transaction | `ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3` ([cardanoscan](https://preprod.cardanoscan.io/transaction/ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3)) |
+| Confirmed collection transaction | [`ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3`](https://preprod.cardanoscan.io/transaction/ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3) |
 | Seller address | `addr_test1qqz6wglg8mvv7f0hrplymhw57z0d5u2jjxt9wt4u4hfvaxsfun3y53q6xrjtzwfwnzgl2urpxtx449wh3nw28crrrdrssejnde` |
 | Test USDM token unit | `16a55b2a349361ff88c03788f93e1e966e5d689605d044fef722ddde0014df10745553444d` (policy `16a55b2a…ddde`, asset name `0014df10745553444d` = tUSDM) |
-| Net amount received | **1 tUSDM** (`1000000` atomic): seller tUSDM outputs `1000000` minus seller tUSDM inputs `0` in the collection tx |
-| Seller receipt (Sokosumi runtime receipt) | `settled: true`, `claimStatus: PURCHASED`, `txHash: ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3` |
+| Net amount received | **1 tUSDM** (`1000000` atomic): seller tUSDM outputs `1000000` minus seller tUSDM inputs `0` in the collection tx (tUSDM only; the ADA network fee is paid separately) |
 | Payment node | Masumi Payment Service, payment source `cmuxxnjge0004f07k1e87u9zw` (Preprod, Web3CardanoV2), selling wallet `cmuxxnjgk0009f07krhvc76qi` |
 | Agent registration | `RegistrationConfirmed`, tx [`ca5832b5…5dc1`](https://preprod.cardanoscan.io/transaction/ca5832b506f34a834a732eba2ff3f00cc52f2fb6bcf84016670deadc6af85dc1) |
+
+Supporting transactions (same payment, Masumi V2 escrow contract `addr_test1wzs4e6wc95hkwezlccjw9mdvq0r0rsgx6zk34avptga3ftgn37w4g`):
+
+| # | On-chain state | Sent by | Transaction hash | Block | Time (UTC) | Explorer |
+|---|---|---|---|---|---|---|
+| 1 | FundsLocked (1 tUSDM escrowed) | buyer (Sokosumi) | `ead8e54bfa59a7a0500ad6fa3914a606861a537b12dd4e612a2dbc89e69e019c` | 5264061 | 2026-10-07 10:28:55 | [cardanoscan](https://preprod.cardanoscan.io/transaction/ead8e54bfa59a7a0500ad6fa3914a606861a537b12dd4e612a2dbc89e69e019c) |
+| 2 | ResultSubmitted (result hash on chain) | our payment node | `02b70f55f770a25e2957c6b09dba25d1789de76518e6fbb27ed0b469dc3041b7` | 5264084 | 2026-10-07 10:38:46 | [cardanoscan](https://preprod.cardanoscan.io/transaction/02b70f55f770a25e2957c6b09dba25d1789de76518e6fbb27ed0b469dc3041b7) |
+| 3 | **Withdrawn (seller collection)** | our payment node | `ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3` | 5264251 | 2026-10-07 11:33:31 | [cardanoscan](https://preprod.cardanoscan.io/transaction/ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3) |
+
+Context: the Sokosumi runtime receipt also reports `claimStatus: PURCHASED`. That alone does not prove the seller was
+paid; the proof is the confirmed collection transaction and the net tUSDM received above.
 
 ## How to re-verify
 
 - **On chain (no key needed):** `POST https://preprod.koios.rest/api/v1/tx_info` with the three hashes and `"_inputs":true,"_assets":true`.
-  Re-checked 2026-10-07: all three found; tx 1 and 2 hold `1000000` tUSDM at the escrow contract; tx 3 pays `1000000` tUSDM to the seller address.
-- **Result ↔ payment:** `sha256sum docs/paid-task-result.md` must print `7ab2aed2…0954`, the result hash submitted in tx 2.
+  Re-checked 2026-10-07: all three found; the escrow lock and result transactions hold `1000000` tUSDM at the escrow contract; the collection pays `1000000` tUSDM to the seller address.
+- **Result ↔ payment:** `sha256sum docs/paid-task-result.md` must print `7ab2aed2…0954`, the result hash submitted in the ResultSubmitted transaction.
 - **Sokosumi side:** `sokosumi tasks get 01a115db-7a10-7148-8526-d516924c360c --json` and `sokosumi tasks events …` (signed in as the
   Task owner; it is a personal-workspace Task, so the Coworker key alone cannot read it).
