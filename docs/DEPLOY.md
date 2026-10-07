@@ -60,6 +60,7 @@ in the image. `.env*` and `.local` are excluded by `.dockerignore`.
 | `CREST_GRAPH_URL` | no | Private URL, e.g. `http://graph.railway.internal:8080`. |
 | `CREST_GRAPH_TOKEN` | yes | Same as graph. Optional `CREST_GRAPH_TIMEOUT_MS`. |
 | `PAID_TASKS_ENABLED` | no | `true` enables the Masumi paid flow for personal Tasks. Optional windows: `PAID_PAY_BY_MIN`, `PAID_SUBMIT_MIN`, `PAID_UNLOCK_MIN`, `PAID_DISPUTE_MIN`. |
+| `PAID_ORG_TASKS` | no | `true` also charges organization Tasks whose title contains `[paid]`; other organization Tasks stay free. Needed for a hosted paid run, because the Coworker key lists organization Tasks only. |
 | `MPS_URL` | no | Base URL of the separately deployed MPS (no `/api/v1`). |
 | `MPS_RUNTIME_TOKEN` | yes | MPS runtime key. Overrides `DATA_DIR/mps-runtime.env`. |
 | `BLOCKFROST_API_KEY_PREPROD` | yes | Settlement verification for paid Tasks. |

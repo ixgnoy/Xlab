@@ -4,7 +4,7 @@ import {acquireWorkerLock} from './worker-lock.mjs';
 import {answer,client} from './client.mjs';
 import {reply} from './comments.mjs';
 import {createPaidAdapter,isPaidReady} from './paid-task.mjs';
-import {collectTasks,parseWorkerTargets,resolveTaskTarget,routeTasks} from './worker-targets.mjs';
+import {collectTasks,parseWorkerTargets,resolveTaskTarget,routeTasks,wantsPayment} from './worker-targets.mjs';
 import {coworkerKeyFromEnv,dataDir,dataPath} from './runtime-env.mjs';
 import {loadSokosumiRuntime} from './sokosumi-runtime.mjs';
 const id=process.env.COWORKER_ID;
@@ -38,11 +38,11 @@ while(true){
  try{
  const journal=dataPath(`${t.id}.json`),resultFile=dataPath(`${t.id}.txt`);
  let state=existsSync(journal)?JSON.parse(readFileSync(journal,'utf8')):{};
- // Paid flow is personal-only; organization Tasks always take the unpaid path.
+ // Paid flow: personal Tasks, plus organization Tasks titled [paid] when PAID_ORG_TASKS=true (see wantsPayment).
  const target=resolveTaskTarget(state,polledTarget);
  if(t.status==='READY'&&!state.phase){writeFileSync(journal,JSON.stringify({phase:'starting',target:target.spec}),{mode:0o600});const started=runtimeCli(['runtime','start',t.id,...target.runtimeArgs,'--coworker-id',id]);state={phase:'started',target:target.spec,input:started.description};writeFileSync(journal,JSON.stringify(state),{mode:0o600});}
  if(state.paid&&process.env.PAID_TASKS_ENABLED!=='true')continue;
- if(state.paid||(state.phase==='started'&&target.kind==='personal'&&process.env.PAID_TASKS_ENABLED==='true'&&isPaidReady())){state=await paid.advance(t,state);if(state.phase==='completed')await reply(t.id);continue;}
+ if(state.paid||(state.phase==='started'&&wantsPayment(t,target)&&isPaidReady())){state=await paid.advance(t,state);if(state.phase==='completed')await reply(t.id);continue;}
  if(state.phase==='started'){
  writeFileSync(journal,JSON.stringify({...state,phase:'model-pending'}),{mode:0o600});
  const result=await answer(state.input,dataPath(`${t.id}-session.json`));

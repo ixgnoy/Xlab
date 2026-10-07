@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DEFAULT_WORKER_TARGETS,collectTasks,parseTarget,parseWorkerTargets,resolveTaskTarget} from './worker-targets.mjs';
+import {DEFAULT_WORKER_TARGETS,collectTasks,parseTarget,parseWorkerTargets,resolveTaskTarget,wantsPayment} from './worker-targets.mjs';
 const ORG='01a109d1-32a9-71a3-a0e3-658b2a7987cd',SLUG='token2049-origins-hackathon-2026-nws2r7',CW='cw-1';
 
 test('default targets are personal plus the TOKEN2049 organization',()=>{
@@ -45,4 +45,14 @@ test('resumed Tasks reuse the journal target; legacy journals are personal',()=>
  assert.deepEqual(resolveTaskTarget({phase:'result-saved',target:org.spec},personal).runtimeArgs,['--organization-id',ORG]);
  assert.equal(resolveTaskTarget({phase:'started'},org).kind,'personal');
  assert.equal(resolveTaskTarget({},org),org);
+});
+test('payment: personal when enabled; organization only with PAID_ORG_TASKS and a [paid] title',()=>{
+ const personal=parseTarget('personal'),org=parseTarget('org:o1:token2049');
+ const on={PAID_TASKS_ENABLED:'true'},both={PAID_TASKS_ENABLED:'true',PAID_ORG_TASKS:'true'};
+ assert.equal(wantsPayment({name:'x'},personal,on),true);
+ assert.equal(wantsPayment({name:'x'},personal,{}),false);
+ assert.equal(wantsPayment({name:'Trends [paid]'},org,on),false);
+ assert.equal(wantsPayment({name:'Trends'},org,both),false);
+ assert.equal(wantsPayment({name:'Trends [PAID]'},org,both),true);
+ assert.equal(wantsPayment({name:'Trends [paid]'},org,{PAID_ORG_TASKS:'true'}),false);
 });

@@ -54,3 +54,10 @@ export function resolveTaskTarget(state,polledTarget){
  if(state?.target)return parseTarget(state.target);
  return state?.phase?parseTarget('personal'):polledTarget;
 }
+// Personal Tasks are paid whenever paid mode is on. An organization Task is paid only when PAID_ORG_TASKS=true and its
+// title carries "[paid]", so the rest of a shared workspace keeps running free.
+export function wantsPayment(task,target,env=process.env){
+ if(env.PAID_TASKS_ENABLED!=='true')return false;
+ if(target.kind==='personal')return true;
+ return env.PAID_ORG_TASKS==='true'&&/\[paid\]/i.test(String(task?.name??''));
+}
