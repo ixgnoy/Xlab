@@ -151,9 +151,11 @@ Pricing reference: Starter $19, Premium $49, Pro $99 per month, credit-based. Im
 | # | title | category | deliverable | output | input the prompt asks for |
 |---|---|---|---|---|---|
 | 1 | **Create: Launch an AI Influencer** | Create | Persona card, 3 on-brand photos, one 8-second reel and a 7-day post plan | doc + image | niche, audience, persona look/vibe (or reference image URLs), voice, platform |
-| 2 | **Schedule: Plan & Auto-Publish Reels** | Schedule | 7- or 30-day calendar with best times; selected posts queued for Instagram | sheet | persona id, posts per week, date range, approve auto-publish (yes/no) |
-| 3 | **Engage: Reply to Comments & DMs** | Engage | Ranked inbox, drafted on-brand replies, sent after approval; escalation list | doc | persona id, reply tone, topics to avoid, auto-send rules |
+| 2 | **Script: Trend-based Reels & TikToks** | Script | Trend swarm (3 agents) then 3 production-ready scripts tied to cited trends: hook, timestamped beats, on-screen text, VO, shot list, sound reference, caption, hashtags, CTA, TikTok vs Reels variants | doc | niche, audience, platform, number of scripts, length, tone |
+| 3 | **Trends: What's Hot on TikTok & Reels** | Trends | Parallel research swarm (LangGraph `Send` fan-out, default 5 lenses) ranks current trends; every claim links to a URL returned by web search | doc | niche, region, time window |
 | 4 | **Analyze: Performance & Next Content** | Analyze | KPI report, top-3 and bottom-3 posts with reasons, hook scores, next week's plan | pdf | persona id, period, goal metric |
+
+Sokosumi cannot link to Instagram/TikTok accounts, so the Schedule (`[stage:schedule]`) and Engage (`[stage:engage]`) stages stay in the graph but have no card.
 
 Each `prompt` field is a template the user completes when starting the card. The worker parses the stage tag (`[stage:create]`, and so on) to route the work.
 

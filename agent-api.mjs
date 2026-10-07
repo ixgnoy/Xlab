@@ -11,11 +11,11 @@ export async function mps(path,body){
  const data=await response.json();if(!response.ok)throw new Error(`Payment service HTTP ${response.status}`);return data.data;
 }
 // PersonaLab studio stages, in display order. Index order matters if a client submits option indices.
-export const STAGES=['create','schedule','engage','analyze'];
+export const STAGES=['create','schedule','engage','analyze','trends','scripts'];
 export const BRIEF_MAX=8000;
 // MIP-003 input schema (Attachment 01 format). Fields are required unless marked `optional`.
 export const schema={input_data:[
- {id:'stage',type:'option',name:'Studio stage',data:{values:STAGES,description:'Create: persona content drafts. Schedule: a posting calendar. Engage: comment and DM replies. Analyze: performance insights and next steps.'},validations:[{validation:'min',value:'1'},{validation:'max',value:'1'}]},
+ {id:'stage',type:'option',name:'Studio stage',data:{values:STAGES,description:'Create: persona content drafts. Schedule: a posting calendar. Engage: comment and DM replies. Analyze: performance insights and next steps. Trends: what is hot on TikTok & Reels, with cited sources. Scripts: trend-based Reel/TikTok scripts.'},validations:[{validation:'min',value:'1'},{validation:'max',value:'1'}]},
  {id:'brief',type:'textarea',name:'Brief',data:{placeholder:'Persona, audience, goal, and any constraints or source material.',description:'What PersonaLab should do for your AI influencer in the chosen stage.'},validations:[{validation:'min',value:'1'},{validation:'max',value:String(BRIEF_MAX)},{validation:'format',value:'nonempty'}]},
 ]};
 // Option fields may arrive as a value, a one-item array, or an index (form clients differ). Returns a stage name or null.

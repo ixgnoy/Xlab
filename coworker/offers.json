@@ -16,23 +16,23 @@
       ]
     },
     {
-      "title": "Schedule: Plan & Auto-Publish Reels",
-      "category": "Schedule",
-      "description": "Build a posting calendar with recommended times and a publishing queue for your AI influencer's Instagram Reels, photos and carousels.",
-      "deliverable": "Posting calendar with times, publishing queue and checklist",
-      "prompt": "[stage:schedule] Plan my posting schedule.\nPersona (name or short description): \nPosts per week: 5\nDate range: next 7 days\nTimezone: \nContent to schedule (ideas or links): \nAuto-publish approved posts (yes/no): no",
+      "title": "Script: Trend-based Reels & TikToks",
+      "category": "Script",
+      "description": "Researches what is trending right now on TikTok and Instagram Reels for your niche (cited sources), then writes production-ready short-video scripts tied to those trends: 0-3s hook, timestamped beats, on-screen text, voiceover, shot list, sound reference, caption, hashtags, CTA and TikTok vs Reels variants.",
+      "deliverable": "Trend-linked short-video scripts with hooks, beats, shot lists, captions and platform variants, plus the cited trend analysis",
+      "prompt": "[stage:scripts] Write trend-based short-video scripts.\nNiche: \nTarget audience: \nPlatform: TikTok and Instagram Reels\nNumber of scripts: 3\nTarget length: 20-35 seconds\nTone: ",
       "outputs": [
         {
-          "type": "sheet"
+          "type": "doc"
         }
       ]
     },
     {
-      "title": "Engage: Reply to Comments & DMs",
-      "category": "Engage",
-      "description": "Triage comments and DMs, draft on-brand replies in your persona's voice, and flag conversations a human should handle. Nothing is sent without approval.",
-      "deliverable": "Ranked inbox, draft replies, escalation list",
-      "prompt": "[stage:engage] Draft replies for my inbox.\nPersona voice: \nTopics to avoid: \nPaste comments and DMs (one per line, with @username): \n",
+      "title": "Trends: What's Hot on TikTok & Reels",
+      "category": "Trends",
+      "description": "A swarm of parallel research agents checks TikTok Creative Center, Instagram creator sources, marketing press, search-interest signals and your niche, then ranks the hottest short-form video trends with links and stated figures only. No account access needed.",
+      "deliverable": "Ranked trend table with evidence links, evidence log, how-to-use notes per top trend, method and limits",
+      "prompt": "[stage:trends] Find what is hot right now in short-form video.\nNiche: \nRegion: Global\nTime window: last 7 days\nPlatforms: TikTok and Instagram Reels",
       "outputs": [
         {
           "type": "doc"
@@ -54,20 +54,20 @@
   ],
   "profile": {
     "llm": [
-      "DeepSeek V4.1 Flash via OpenRouter"
+      "DeepSeek V4.1 Flash via OpenRouter",
+      "DeepSeek V4.1 Flash with OpenRouter web search (trend research)"
     ],
     "hosting": "Operator-hosted LangGraph service",
     "capabilities": [
       "AI persona design",
-      "Reel scripts and captions",
-      "Posting calendars",
-      "Comment and DM drafting",
+      "Trend research with cited sources",
+      "Trend-based Reel and TikTok scripts",
       "Performance analysis"
     ],
     "examples": [
       "Launch a faceless fitness-coach AI influencer",
-      "Plan 5 Reels for next week",
-      "Draft replies to 10 comments",
+      "What is trending on TikTok and Reels for fitness this week?",
+      "Write 3 trend-based Reels for a personal-finance persona",
       "Explain why last week's Reels underperformed"
     ]
   },
