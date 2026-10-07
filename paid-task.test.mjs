@@ -47,3 +47,17 @@ test('successful quote survives later payload rejection',async()=>{
 test('running MPS legacy response without unsigned forceLayer is supported',()=>{const older={...payment};delete older.forceLayer;assert.equal(purchasePayload(older,'nonce',registration).blockchainIdentifier,'signed');});
 
 test('unrelated confirmed transaction cannot prove escrow',()=>{assert.equal(confirmedState({CurrentTransaction:{status:'Confirmed',newOnChainState:'Withdrawn'}},'FundsLocked'),false)});
+test('terms-pending with a lapsed pay-by time requests fresh terms; a live one stays blocked',async()=>{
+ const saved=[];let calls=0;
+ const adapter=await createPaidAdapter({registration,save:async(id,s)=>{saved.push(s.paid)},answer:async()=>{},mps:async()=>{calls++;return payment}});
+ const lapsed=await adapter.advance({id:'task'},{input:'abc',paid:{stage:'terms-pending',request:{payByTime:new Date(Date.now()-1000).toISOString()}}});
+ assert.equal(calls,1);assert.equal(lapsed.paid.stage,'terms-saved');
+ await assert.rejects(()=>adapter.advance({id:'task'},{input:'abc',paid:{stage:'terms-pending',request:{payByTime:new Date(Date.now()+60000).toISOString()}}}),/automatic retry disabled/);
+ assert.equal(calls,1);
+});
+test('a 4xx quote rejection clears the pending terms so the next poll retries',async()=>{
+ const saved=[];
+ const adapter=await createPaidAdapter({registration,save:async(id,s)=>{saved.push(s.paid)},answer:async()=>{},mps:async()=>{throw Object.assign(new Error('MPS /api/v1/payment failed HTTP 400'),{status:400})}});
+ await assert.rejects(()=>adapter.advance({id:'task'},{input:'abc'}),/HTTP 400/);
+ assert.deepEqual(saved.at(-1),{});
+});

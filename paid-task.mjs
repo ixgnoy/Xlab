@@ -45,12 +45,17 @@ export async function createPaidAdapter({save,answer,core:providedCore,mps:provi
   const response=await fetch(`${process.env.MPS_URL}${path}`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(30000),
    headers:{'Content-Type':'application/json',token},body:JSON.stringify(body)});
   const data=await response.json();
-  if(!response.ok||data.status!=='success')throw new Error(`MPS ${path} failed HTTP ${response.status}. Inspect saved state before retry.`);
+  if(!response.ok||data.status!=='success'){
+   const reason=String(data?.error?.message??data?.message??'').slice(0,160);
+   throw Object.assign(new Error(`MPS ${path} failed HTTP ${response.status}${reason?`: ${reason}`:''}. Inspect saved state before retry.`),{status:response.status});
+  }
   return data.data;
  }
  async function persist(task,state,paid){const next={...state,paid};await save(task.id,next);return next;}
  return {async advance(task,state){
   let p=state.paid??{};const r=registration();
+  // Terms whose pay-by time has passed can never be paid, so an unconfirmed request for them is safe to replace.
+  if(p.stage==='terms-pending'&&Date.now()>=Date.parse(p.request?.payByTime)){state=await persist(task,state,{});p={};}
   if(!p.stage){
    if(!state.input?.trim())throw new Error('Paid Task requires authoritative started input');
    const nonce=randomBytes(10).toString('hex');const now=Date.now();
@@ -59,7 +64,9 @@ export async function createPaidAdapter({save,answer,core:providedCore,mps:provi
     payByTime:new Date(now+W.payBy*MINUTE).toISOString(),submitResultTime:new Date(now+W.submit*MINUTE).toISOString(),unlockTime:new Date(now+W.unlock*MINUTE).toISOString(),externalDisputeUnlockTime:new Date(now+W.dispute*MINUTE).toISOString(),metadata:JSON.stringify({taskId:task.id})};
    if(!body.agentIdentifier||!Number.isInteger(body.supportedPaymentSourceIndex))throw new Error('Registration identifier and source index are required');
    state=await persist(task,state,{stage:'terms-pending',nonce,request:body});
-   const payment=await mps('/api/v1/payment',body);
+   let payment;
+   try{payment=await mps('/api/v1/payment',body);}
+   catch(e){if(e.status>=400&&e.status<500)await persist(task,state,{});throw e;} // a 4xx created no payment: retry with fresh terms
    return persist(task,state,{...state.paid,stage:'terms-saved',payment});
   }
   if(p.stage==='terms-saved'){
