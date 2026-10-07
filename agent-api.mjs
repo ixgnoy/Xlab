@@ -42,6 +42,8 @@ export function jobPrompt(input){
 }
 const respond=(res,status,data)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify(data))};
 // Sokosumi reads camelCase inputHash; MIP-003 specifies input_hash. Return both, including on idempotent replays.
+// MIP-003 sellerVKey: prefer the payment's own wallet, then the registry record shapes MPS returns.
+export const sellerVkeyOf=(reg,payment)=>payment?.SmartContractWallet?.walletVkey??reg?.sellerVkey??reg?.registration?.SmartContractWallet?.walletVkey??reg?.request?.sellingWalletVkey;
 const withHashAliases=r=>r.input_hash&&!r.inputHash?{...r,inputHash:r.input_hash}:r;
 export function createAgentApi({jobsDir='.local/standard-jobs',answer=defaultAnswer,mps:callMps=mps,registry=()=>JSON.parse(readFileSync('docs/registration-state.json','utf8')),now=Date.now}={}){
  mkdirSync(jobsDir,{recursive:true,mode:0o700});
@@ -71,7 +73,7 @@ export function createAgentApi({jobsDir='.local/standard-jobs',answer=defaultAns
  const t=now();const minute=60000;
  job={id:randomUUID(),nonceKey:key,nonce,input:input.input_data,inputHash:hash,status:'awaiting_payment',phase:'payment-pending'};save(job);
  const payment=await callMps('/payment',{network:'Preprod',paymentSourceType:'Web3CardanoV2',supportedPaymentSourceIndex:reg.supportedPaymentSourceIndex,inputHash:job.inputHash,agentIdentifier:reg.agentIdentifier,identifierFromPurchaser:nonce,RequestedFunds:[{unit:'16a55b2a349361ff88c03788f93e1e966e5d689605d044fef722ddde0014df10745553444d',amount:'1000000'}],payByTime:new Date(t+10*minute).toISOString(),submitResultTime:new Date(t+20*minute).toISOString(),unlockTime:new Date(t+36*minute).toISOString(),externalDisputeUnlockTime:new Date(t+52*minute).toISOString()});
- job.payment=payment;job.phase='waiting-payment';job.response={id:job.id,input_hash:job.inputHash,inputHash:job.inputHash,identifierFromPurchaser:nonce,blockchainIdentifier:payment.blockchainIdentifier,agentIdentifier:reg.agentIdentifier,sellerVKey:reg.sellerVkey,paymentSourceType:'Web3CardanoV2',supportedPaymentSourceIndex:reg.supportedPaymentSourceIndex,payByTime:Number(payment.payByTime),submitResultTime:Number(payment.submitResultTime),unlockTime:Number(payment.unlockTime),externalDisputeUnlockTime:Number(payment.externalDisputeUnlockTime)};save(job);return respond(res,200,job.response);
+ job.payment=payment;job.phase='waiting-payment';job.response={id:job.id,input_hash:job.inputHash,inputHash:job.inputHash,identifierFromPurchaser:nonce,blockchainIdentifier:payment.blockchainIdentifier,agentIdentifier:reg.agentIdentifier,sellerVKey:sellerVkeyOf(reg,payment),paymentSourceType:'Web3CardanoV2',supportedPaymentSourceIndex:reg.supportedPaymentSourceIndex,payByTime:Number(payment.payByTime),submitResultTime:Number(payment.submitResultTime),unlockTime:Number(payment.unlockTime),externalDisputeUnlockTime:Number(payment.externalDisputeUnlockTime)};save(job);return respond(res,200,job.response);
  }catch(e){respond(res,500,{error:'Request failed. Inspect the saved job state before retrying.'})}
  }
  let busy=false;

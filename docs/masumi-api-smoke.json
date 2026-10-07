@@ -1,0 +1,120 @@
+{
+  "startedAt": "2026-10-07T10:40:01.948Z",
+  "baseUrl": "http://127.0.0.1:21950",
+  "spec": "MIP-003 Standard agent API (+ MIP-004 input hash)",
+  "steps": [
+    {
+      "name": "availability",
+      "at": "2026-10-07T10:40:01.949Z",
+      "method": "GET",
+      "endpoint": "/availability",
+      "status": 200
+    },
+    {
+      "name": "input_schema",
+      "at": "2026-10-07T10:40:02.005Z",
+      "method": "GET",
+      "endpoint": "/input_schema",
+      "status": 200
+    },
+    {
+      "name": "start_job",
+      "at": "2026-10-07T10:40:02.010Z",
+      "method": "POST",
+      "endpoint": "/start_job",
+      "status": 200
+    },
+    {
+      "name": "status?job_id",
+      "at": "2026-10-07T10:40:02.785Z",
+      "method": "GET",
+      "endpoint": "/status?job_id=993abee4-488a-4a72-bf54-9ab192c24ce8",
+      "status": 200
+    },
+    {
+      "name": "status?jobId",
+      "at": "2026-10-07T10:40:02.788Z",
+      "method": "GET",
+      "endpoint": "/status?jobId=993abee4-488a-4a72-bf54-9ab192c24ce8",
+      "status": 200
+    }
+  ],
+  "schemaFields": [
+    {
+      "id": "stage",
+      "type": "option",
+      "validations": [
+        {
+          "validation": "min",
+          "value": "1"
+        },
+        {
+          "validation": "max",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "id": "brief",
+      "type": "textarea",
+      "validations": [
+        {
+          "validation": "min",
+          "value": "1"
+        },
+        {
+          "validation": "max",
+          "value": "8000"
+        },
+        {
+          "validation": "format",
+          "value": "nonempty"
+        }
+      ]
+    }
+  ],
+  "job": {
+    "id": "993abee4-488a-4a72-bf54-9ab192c24ce8",
+    "identifierFromPurchaser": "3b1b7bb56b396ddc826b",
+    "blockchainIdentifierPrefix": "298230cc02c086104c0ec00e...",
+    "blockchainIdentifierLength": 1132,
+    "agentIdentifier": "67ab0c92c4ac1610895a1c965ee50aba41a8f1513b15240723b3bd0b10648ac99be37c280788d2c1a9270b4960d342b1d4fb4a830b5beba022000000",
+    "sellerVKey": "05a723e83ed8cf25f7187e4dddd4f09eda71529196572ebcadd2ce9a",
+    "paymentSourceType": "Web3CardanoV2",
+    "deadlines": {
+      "payByTime": "2026-10-07T10:50:02.017Z",
+      "submitResultTime": "2026-10-07T11:00:02.017Z",
+      "unlockTime": "2026-10-07T11:16:02.017Z",
+      "externalDisputeUnlockTime": "2026-10-07T11:32:02.017Z"
+    },
+    "missingFields": []
+  },
+  "hashCheck": {
+    "method": "sha256(identifier_from_purchaser + \";\" + JCS(input_data)), computed independently of standard-hash.mjs",
+    "expected": "323d9f8b20054f8af3e94eaa7c74283a241f3b13963ed4f126acbf1937e0dc7b",
+    "input_hash": "323d9f8b20054f8af3e94eaa7c74283a241f3b13963ed4f126acbf1937e0dc7b",
+    "inputHash": "323d9f8b20054f8af3e94eaa7c74283a241f3b13963ed4f126acbf1937e0dc7b",
+    "match": true
+  },
+  "status": {
+    "job_id": {
+      "status": 200,
+      "jobStatus": "awaiting_payment"
+    },
+    "jobId": {
+      "status": 200,
+      "jobStatus": "awaiting_payment"
+    }
+  },
+  "checks": {
+    "availability": true,
+    "input_schema": true,
+    "start_job_fields": true,
+    "input_hash_matches_mip004": true,
+    "deadlines_ordered": true,
+    "status_awaiting_payment": true
+  },
+  "passed": true,
+  "notes": "Seller side only. Unpaid MPS payment request (Preprod) will expire at payByTime; no buyer funds were used.",
+  "finishedAt": "2026-10-07T10:40:02.791Z"
+}

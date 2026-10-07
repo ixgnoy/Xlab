@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {createServer} from 'node:http';
-import {createAgentApi,schema,STAGES,validateInputData,jobPrompt,normalizeStage} from './agent-api.mjs';
+import {createAgentApi,schema,STAGES,validateInputData,jobPrompt,normalizeStage,sellerVkeyOf} from './agent-api.mjs';
 import {inputHash} from './standard-hash.mjs';
 
 const NONCE='aabbccddeeff0011';
@@ -121,5 +121,20 @@ test('legacy prompt job still runs the prompt verbatim',async()=>{
  const body=await (await startJob(base,{prompt:'Old style brief'})).json();
  assert.equal(body.inputHash,inputHash({prompt:'Old style brief'},NONCE));
  await api.tick();assert.deepEqual(answers,['Old style brief']);
+ });
+});
+
+test('sellerVKey resolves from payment wallet or saved registration state shapes',()=>{
+ assert.equal(sellerVkeyOf({sellerVkey:'a'},{SmartContractWallet:{walletVkey:'p'}}),'p');
+ assert.equal(sellerVkeyOf({sellerVkey:'a'},{}),'a');
+ assert.equal(sellerVkeyOf({registration:{SmartContractWallet:{walletVkey:'r'}},request:{sellingWalletVkey:'q'}},{}),'r');
+ assert.equal(sellerVkeyOf({request:{sellingWalletVkey:'q'}},undefined),'q');
+});
+
+test('start_job returns sellerVKey from real registration-state shape',async()=>{
+ const reg={registrationState:'RegistrationConfirmed',agentIdentifier:'agent-1',supportedPaymentSourceIndex:0,registration:{SmartContractWallet:{walletVkey:'vk-real'}}};
+ await withApi({registry:()=>reg,mps:async(p,body)=>paymentFor(body),now:()=>t0},async({base})=>{
+ const body=await (await startJob(base,{stage:'analyze',brief:'x'})).json();
+ assert.equal(body.sellerVKey,'vk-real');
  });
 });
