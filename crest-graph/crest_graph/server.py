@@ -97,6 +97,19 @@ def media_file(run_id: str, name: str, request: Request) -> FileResponse:
     )
 
 
+# ---- Engage approvals (sends only drafts a human approved; DRY-RUN without Instagram credentials) ----
+class ApproveRequest(BaseModel):
+    thread_id: str | None = Field(default=None, max_length=200)
+    ids: list[int] = Field(min_length=1, max_length=50)
+
+
+@app.post("/approve", dependencies=[Depends(require_token)])
+def approve_drafts(request: ApproveRequest) -> dict:
+    from .ig_workflows import approve_ids
+
+    return {"thread_id": request.thread_id, "results": approve_ids(request.ids, request.thread_id)}
+
+
 def main() -> None:
     uvicorn.run(app, host="127.0.0.1", port=int(config.get("CREST_GRAPH_PORT", "21951")), log_level="info")
 
