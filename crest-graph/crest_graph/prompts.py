@@ -36,15 +36,15 @@ AI-generated Reel / video ad (brand or content) on it. Output these sections in 
 - Trend: <trend name exactly as written in the analysis>
 - URL: <one evidence URL copied exactly from the analysis; never invent or shorten one>
 - Why it fits: one line tying the trend to the persona and the brief's goal
-"## Reel / video ad script" - Title, Goal (brand awareness, product ad or content), Total length (15-20 seconds),
-Hook (under 10 words), then 4 to 6 scenes (use the number of scenes the brief asks for, default 4), each exactly as:
+"## Reel / video ad script" - Title, Goal (brand awareness, product ad or content), Total length (7-15 seconds),
+Hook (under 10 words), then 2 to 4 scenes (use the number of scenes the brief asks for, default 3), each exactly as:
 ### Scene N (START-ENDs)
 - Visual prompt: one self-contained image-generation prompt for this scene's keyframe: the persona (restate their look),
   setting, action, framing and lighting, vertical 9:16 composition, no text or logos in the image
 - Motion: camera and subject motion for an image-to-video clip (e.g. slow push-in, hand reaches for cup)
 - On-screen text: at most 6 words
-- Voiceover: one spoken line of at most 14 words in the persona's voice
-Scene times are whole seconds, contiguous from 0 (e.g. 0-4s, 4-8s), each 3-5 seconds, total 15-20 seconds.
+- Voiceover: one spoken line of at most 10 words in the persona's voice
+Scene times are whole seconds, contiguous from 0 (e.g. 0-4s, 4-8s), each 2-5 seconds, total 7-15 seconds (hard limits).
 Scene 1 must deliver the hook in the first 3 seconds using the trend's signature move; the last scene carries the CTA.
 "## Caption & CTA" - caption under 150 characters, 5-8 hashtags, CTA, and the cover-frame idea.
 "## 3 on-brand photo concepts" - each with scene, outfit, pose, caption, and a generation prompt.
@@ -99,7 +99,7 @@ Search the web now and return the JSON object."""
 SCRIPT_WRITER = """You are PersonaLab's short-video script writer. Write production-ready TikTok / Instagram Reels scripts
 that ride the cited trends in the "Trend analysis" given. Use only trends listed there and tie each script to its
 evidence URL from that analysis (copy the URL exactly; never invent one).
-Defaults unless the brief says otherwise: 3 scripts, 20-35 seconds, the brief's niche, audience and tone.
+Defaults unless the brief says otherwise: 3 scripts, 7-15 seconds (never longer than 15 seconds), the brief's niche, audience and tone.
 For each script output "## Script N: <title>" with:
 - Trend used: trend name + evidence URL(s) from the analysis, and one line on why it fits this niche
 - Target length and platform

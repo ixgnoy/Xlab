@@ -71,7 +71,7 @@ def settings(tmp_path, monkeypatch, **values):
 class FakeFFmpeg:
     """Stands in for subprocess.run: writes the output file of each encode and answers `ffmpeg -i` probes."""
 
-    def __init__(self, reel_seconds: float = 16.3, fail_on: str | None = None):
+    def __init__(self, reel_seconds: float = 12.3, fail_on: str | None = None):
         self.calls: list[list[str]] = []
         self.reel_seconds = reel_seconds
         self.fail_on = fail_on
@@ -201,12 +201,38 @@ def test_ffmpeg_commands_are_well_formed():
     assert "anullsrc=r=44100:cl=stereo" in silent[silent.index("-filter_complex") + 1]
 
 
-def test_durations_stretch_for_voiceover_and_cap_at_60s():
-    scenes = video.parse_scenes(CONTENT)
-    durations = video.plan_durations(scenes, {0: 5.2})
-    assert durations[0] >= 5.2 + 0.15 + video.CROSSFADE and durations[3] == 4.0
+def test_durations_fit_short_form_window_7_to_15s():
     long = [video.Scene(i, i * 8, i * 8 + 8, "x") for i in range(6)]
-    assert video.total_length(video.plan_durations(long, {i: 7.9 for i in range(6)})) <= 48.1
+    capped = video.plan_durations(long, {i: 7.9 for i in range(6)})
+    assert video.MIN_REEL_SECONDS <= video.total_length(capped) <= video.MAX_REEL_SECONDS
+    assert all(d >= 1.0 for d in capped)
+    many = [video.Scene(i, i * 5, i * 5 + 5, "x") for i in range(video.MAX_REEL_SCENES)]
+    assert video.total_length(video.plan_durations(many, {})) <= video.MAX_REEL_SECONDS
+    short = video.plan_durations([video.Scene(0, 0, 2, "x"), video.Scene(1, 2, 4, "x")], {})
+    assert video.MIN_REEL_SECONDS <= video.total_length(short) <= video.MAX_REEL_SECONDS
+    within = video.plan_durations([video.Scene(0, 0, 4, "x"), video.Scene(1, 4, 8, "x"), video.Scene(2, 8, 12, "x")], {0: 3.0})
+    assert within == [4.35, 4.35, 4.0]  # already in the window: planned lengths kept
+
+
+def test_final_encode_caps_bitrate():
+    cmd = video.assemble_command("ffmpeg", ["a.mp4"], [10.0], [], "reel.mp4")
+    assert cmd[cmd.index("-maxrate") + 1] == video.MAX_VIDEO_BITRATE and "-bufsize" in cmd
+
+
+def test_compress_targets_under_100mb(tmp_path):
+    src = tmp_path / "reel.mp4"
+    src.write_bytes(b"x")
+    calls = []
+
+    def runner(args, cwd, **_):
+        calls.append(args)
+        (Path(cwd) / args[-1]).write_bytes(b"small")
+        return subprocess.CompletedProcess(args, 0, b"", b"")
+
+    out = video.compress("ffmpeg", src, 15.0, runner)
+    assert out.name == "reel-small.mp4" and out.read_bytes() == b"small"
+    kbps = int(calls[0][calls[0].index("-b:v") + 1].rstrip("k"))
+    assert (kbps + 128) * 1000 * 15 / 8 < video.MAX_REEL_BYTES
 
 
 # ---------------------------------------------------------------- make_reel paths
@@ -226,7 +252,7 @@ def test_ai_video_model_path(tmp_path, monkeypatch):
     assert result.cost_usd == pytest.approx(4 * 0.12 + 0.00153, abs=0.001)  # reported clip cost + TTS chars * price
     assert sum(1 for m, p in log if m == "POST" and p.endswith("/videos")) == 4
     assert not (tmp_path / ".local" / "media" / RUN / "work").exists()  # intermediates removed
-    assert result.duration == 16.3 and result.width == 720 and len(result.sha256) == 64
+    assert result.duration == 12.3 and result.width == 720 and len(result.sha256) == 64
 
 
 def test_falls_back_to_local_assembly_when_video_model_unavailable(tmp_path, monkeypatch):

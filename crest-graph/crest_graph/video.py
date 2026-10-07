@@ -38,8 +38,12 @@ DEFAULT_TTS_VOICE = "en-US-Harper:MAI-Voice-2.1-Flash"
 DEFAULT_USD_PER_VIDEO_SECOND = 0.20  # used only when live pricing is unparseable; deliberately pessimistic
 DEFAULT_TTS_USD_PER_CHAR = 0.00003
 REEL_NAME = "reel.mp4"
-MAX_REEL_SECONDS = 60.0
-MAX_VIDEO_BYTES = 200 * 1024 * 1024
+MIN_REEL_SECONDS = 7.0  # short-form Reels / TikTok window
+MAX_REEL_SECONDS = 15.0
+MAX_REEL_SCENES = 8  # keeps the 1 s scene floor inside MAX_REEL_SECONDS
+MAX_REEL_BYTES = 100 * 1000 * 1000  # delivered reel stays under 100 MB
+MAX_VIDEO_BITRATE = "8M"  # VBV ceiling: 15 s at 8 Mb/s is ~15 MB, far below MAX_REEL_BYTES
+MAX_VIDEO_BYTES = 200 * 1024 * 1024  # per downloaded AI clip
 FPS = 30
 CROSSFADE = 0.35
 SIZES = {"720x1280": (720, 1280), "1080x1920": (1080, 1920)}
@@ -428,7 +432,8 @@ def assemble_command(
         filters.append(f"anullsrc=r=44100:cl=stereo,atrim=0:{total:.3f}[aout]")
     return [
         *args, "-filter_complex", ";".join(filters), "-map", "[vout]", "-map", "[aout]",
-        "-c:v", "libx264", "-profile:v", "high", "-preset", "medium", "-crf", "21", "-pix_fmt", "yuv420p", "-r", str(FPS),
+        "-c:v", "libx264", "-profile:v", "high", "-preset", "medium", "-crf", "21",
+        "-maxrate", MAX_VIDEO_BITRATE, "-bufsize", "16M", "-pix_fmt", "yuv420p", "-r", str(FPS),
         "-c:a", "aac", "-b:a", "128k", "-ar", "44100", "-ac", "2", "-t", f"{total:.3f}", "-movflags", "+faststart", out,
     ]
 
@@ -706,16 +711,36 @@ def voiceover(lines: dict[int, str], work: Path, notes: list[str], runner: Runne
 
 
 def plan_durations(scenes: list[Scene], voice_lengths: dict[int, float]) -> list[float]:
-    """Scene length = planned length, stretched so its voiceover fits before the crossfade; total capped at 60 s."""
+    """Scene length = planned length, stretched so its voiceover fits before the crossfade; the total is then
+    fitted into MIN_REEL_SECONDS..MAX_REEL_SECONDS (each scene keeps at least 1 s when shrinking)."""
     out = []
     for i, scene in enumerate(scenes):
         tail = CROSSFADE if i < len(scenes) - 1 else 0.0
         need = voice_lengths.get(i, 0.0) + 0.15 + 0.25 + tail
-        out.append(round(min(8.0, max(scene.duration + tail, need, 1.5)), 2))
+        out.append(min(8.0, max(scene.duration + tail, need, 1.5)))
+    overlap = CROSSFADE * max(0, len(out) - 1)
     total = total_length(out)
     if total > MAX_REEL_SECONDS:
-        scale = MAX_REEL_SECONDS / total
-        out = [round(max(1.0, d * scale), 2) for d in out]
+        # shrink only the part above the 1 s floor so the floor can never push the total back over the cap
+        floor, extra = len(out) * 1.0, sum(out) - len(out) * 1.0
+        k = max(0.0, (MAX_REEL_SECONDS - 0.05 + overlap - floor) / extra) if extra > 0 else 0.0
+        out = [1.0 + (d - 1.0) * k for d in out]
+    elif total < MIN_REEL_SECONDS:
+        k = (MIN_REEL_SECONDS + 0.05 + overlap) / sum(out)
+        out = [d * k for d in out]
+    return [round(d, 2) for d in out]
+
+
+def compress(ffmpeg: str, src: Path, duration: float, runner: Runner = subprocess.run) -> Path:
+    """Re-encode `src` at a bitrate sized to land at ~90% of MAX_REEL_BYTES; returns the new file."""
+    video_kbps = max(500, int(MAX_REEL_BYTES * 0.9 * 8 / duration / 1000) - 128)
+    out = src.with_name("reel-small.mp4")
+    result = _run(runner, [ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-i", str(src), "-c:v", "libx264",
+                           "-preset", "medium", "-b:v", f"{video_kbps}k", "-maxrate", f"{video_kbps}k",
+                           "-bufsize", f"{video_kbps * 2}k", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k",
+                           "-movflags", "+faststart", out.name], src.parent, 600)
+    if result.returncode != 0 or not out.is_file():
+        raise VideoError(f"compression failed: {_stderr(result).strip()[-200:]}")
     return out
 
 
@@ -734,6 +759,8 @@ def make_reel(
         raise VideoError("invalid run id")
     if not scenes:
         raise VideoError("the content has no parseable reel scenes")
+    dropped = max(0, len(scenes) - MAX_REEL_SCENES)
+    scenes = scenes[:MAX_REEL_SCENES]
     usable = [k for k in keyframes if k is not None and Path(k).is_file()]
     if not usable:
         raise VideoError("no keyframe images were generated")
@@ -747,7 +774,7 @@ def make_reel(
     folder = media.media_root() / run_id
     work = folder / "work"
     work.mkdir(parents=True, exist_ok=True)
-    notes: list[str] = []
+    notes: list[str] = [f"kept the first {MAX_REEL_SCENES} scenes; {dropped} more were dropped"] if dropped else []
     try:
         clips, clip_cost, model_id = ai_clips(scenes, frames, work, budget_usd, notes, client, sleep)
         lines = {s.index: s.voiceover for s in scenes if s.voiceover.strip()}
@@ -795,8 +822,15 @@ def make_reel(
         if not built.is_file():
             raise VideoError("ffmpeg produced no file")
         info = probe(ffmpeg, built, runner)
-        if info["video"] != "h264" or info["audio"] != "aac" or not 0 < info["duration"] <= MAX_REEL_SECONDS + 0.5:
+        if built.stat().st_size > MAX_REEL_BYTES and info["duration"] > 0:
+            built = compress(ffmpeg, built, info["duration"], runner)
+            notes.append("reel re-encoded at a lower bitrate to stay under 100 MB")
+            info = probe(ffmpeg, built, runner)
+        if (info["video"] != "h264" or info["audio"] != "aac"
+                or not MIN_REEL_SECONDS - 0.5 <= info["duration"] <= MAX_REEL_SECONDS + 0.5):
             raise VideoError(f"output failed verification (video={info['video']}, audio={info['audio']}, {info['duration']:.1f}s)")
+        if built.stat().st_size > MAX_REEL_BYTES:
+            raise VideoError(f"output is {built.stat().st_size / 1e6:.1f} MB, over the 100 MB limit")
         final = folder / REEL_NAME
         os.replace(built, final)
         data = final.read_bytes()
