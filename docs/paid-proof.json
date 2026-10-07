@@ -1,0 +1,63 @@
+{
+  "provenance": "VERIFIED 2026-10-07: MPS resolve-blockchain-identifier, Sokosumi runtime receipt, Blockfrost txs/{hash}/utxos",
+  "coworkerId": "01a1156a-dbc8-7360-813b-043c0e148296",
+  "vendorId": "01a1156a-7184-77bb-a15f-f712b72381be",
+  "paidTaskId": "01a115db-7a10-7148-8526-d516924c360c",
+  "taskStatus": "COMPLETED",
+  "paymentRequestEventId": "01a115e7-15dd-7728-a4be-d961a3c56f6a",
+  "completionEventId": "01a115f7-b0e0-7069-92ae-4223d6aeb607",
+  "agentIdentifier": "67ab0c92c4ac1610895a1c965ee50aba41a8f1513b15240723b3bd0b10648ac99be37c280788d2c1a9270b4960d342b1d4fb4a830b5beba022000000",
+  "blockchainIdentifierPrefix": "318260ac026604601c02c10230139e4e",
+  "signedDeadlines": {
+    "payByTime": "2026-10-07T10:41:58.810Z",
+    "submitResultTime": "2026-10-07T11:06:58.810Z",
+    "unlockTime": "2026-10-07T11:22:58.810Z",
+    "externalDisputeUnlockTime": "2026-10-07T11:38:58.810Z"
+  },
+  "quote": {
+    "amount": "1000000",
+    "unit": "16a55b2a349361ff88c03788f93e1e966e5d689605d044fef722ddde0014df10745553444d"
+  },
+  "inputHash": "fb9aa2fae5be1138b2b67fcfb32adea411a155bd3aed0caba11c84d64150f414",
+  "resultHash": "7ab2aed29451f9de720cd141be0e0262e74cc2a7fa17bc508ffbefea223a0954",
+  "finalOnChainState": "Withdrawn",
+  "transactions": [
+    {
+      "txHash": "02b70f55f770a25e2957c6b09dba25d1789de76518e6fbb27ed0b469dc3041b7",
+      "newOnChainState": "ResultSubmitted",
+      "status": "Confirmed",
+      "explorer": "https://preprod.cardanoscan.io/transaction/02b70f55f770a25e2957c6b09dba25d1789de76518e6fbb27ed0b469dc3041b7"
+    },
+    {
+      "txHash": "ead8e54bfa59a7a0500ad6fa3914a606861a537b12dd4e612a2dbc89e69e019c",
+      "newOnChainState": "FundsLocked",
+      "status": "Confirmed",
+      "explorer": "https://preprod.cardanoscan.io/transaction/ead8e54bfa59a7a0500ad6fa3914a606861a537b12dd4e612a2dbc89e69e019c"
+    },
+    {
+      "txHash": "ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3",
+      "newOnChainState": "Withdrawn",
+      "status": "Confirmed",
+      "explorer": "https://preprod.cardanoscan.io/transaction/ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3"
+    }
+  ],
+  "collectionTx": "ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3",
+  "collectionBlock": 5264251,
+  "collectionTime": "2026-10-07T11:33:31Z",
+  "sellerAddress": "addr_test1qqz6wglg8mvv7f0hrplymhw57z0d5u2jjxt9wt4u4hfvaxsfun3y53q6xrjtzwfwnzgl2urpxtx449wh3nw28crrrdrssejnde",
+  "sellerNetReceipt": {
+    "atomic": "1000000",
+    "usdm": "1",
+    "method": "Blockfrost tx utxos: seller tUSDM outputs minus seller tUSDM inputs"
+  },
+  "sokosumiReceipt": {
+    "settled": true,
+    "txHash": "ec5b8dad2a32927b72bd171d0dde69e276fb9485d5b14d6529ea6f4a290d3bc3"
+  },
+  "priorAttempt": "First terms (payBy +5 min) expired with no escrow lock; fresh terms with payBy +15 min on the same Task succeeded",
+  "registration": {
+    "id": "cmuxy6tgw0004z47kivbwxd9w",
+    "state": "RegistrationConfirmed",
+    "tx": "ca5832b506f34a834a732eba2ff3f00cc52f2fb6bcf84016670deadc6af85dc1"
+  }
+}
