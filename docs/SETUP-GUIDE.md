@@ -162,13 +162,27 @@ Values are read in this order: real environment first, then `.env.local`, then `
 sokosumi --preprod coworkers update 01a1156a-dbc8-7360-813b-043c0e148296 --metadata-file coworker/offers.json --json
 ```
 
-This creates four cards. Each prompt starts with a stage tag, and the supervisor routes on that tag:
-- Create (`[stage:create]`, outputs doc + image)
-- Script: Trend-based Reels & TikToks (`[stage:scripts]`, doc) - runs a 3-agent trend swarm, then writes scripts
-- Trends: What's Hot on TikTok & Reels (`[stage:trends]`, doc) - parallel research swarm with cited sources
-- Analyze (`[stage:analyze]`, pdf)
+This creates the final four cards. Each prompt starts with a stage tag, and the supervisor routes on that tag:
+- Onboarding: Build Your Virtual Avatar (`[stage:onboarding]`, doc) - turns a real creator's interests, values, story, expertise and moat into a personal avatar profile and a reusable Avatar JSON that later Create and Script Tasks can reuse
+- Create: AI Influencer Reel & Video Ad (`[stage:create]`, doc + image) - trend swarm → persona → scene script citing the trend URL → persona-consistent keyframes (Gemini 3.1 Flash Lite Image) → AI image-to-video clips (xAI Grok Imagine Video 1.5 Lite) + voiceover → 9:16 MP4, with a local ffmpeg fallback
+- Script: Trend-based Reels & TikToks (`[stage:scripts]`, doc) - runs the trend swarm, then writes scripts tied to cited trends
+- Trends: What's Hot on TikTok & Reels (`[stage:trends]`, doc) - LangGraph `Send` fan-out to parallel researchers; only trends with a search-returned URL survive, and any figure must appear in the cited source excerpt
 
-Sokosumi cannot link to Instagram/TikTok accounts, so the `[stage:schedule]` and `[stage:engage]` stages are not offered as cards. They still work in the graph when tagged directly.
+Sokosumi cannot link Instagram/TikTok accounts, so `[stage:schedule]`, `[stage:engage]` and `[stage:analyze]` are not offered as cards. They stay in the graph (Instagram API calls in dry-run) and still work when tagged directly.
+
+### Stage settings (`.env`, non-secret)
+
+| Setting | Default | Used by |
+|---|---|---|
+| `IMAGE_MODEL_ID` | `google/gemini-3.1-flash-lite-image` | Create keyframes and persona portrait |
+| `IMAGE_GENERATION`, `MAX_IMAGES`, `IMAGE_TIMEOUT_S`, `IMAGE_USD_PER_IMAGE` | see `.env.example` | image step on/off, cap, timeout, cost estimate |
+| `VIDEO_MODEL_ID` | `x-ai/grok-imagine-video-1.5-lite` | Create image-to-video clips (OpenRouter) |
+| `VIDEO_GENERATION`, `VIDEO_AI`, `VIDEO_MAX_CLIPS`, `VIDEO_SIZE` | on, on, 4, `720x1280` | `off` skips video / forces ffmpeg assembly |
+| `VOICE_ENGINE`, `TTS_MODEL_ID`, `TTS_VOICE` | `auto` | voiceover: OpenRouter TTS, then Windows System.Speech, then silent AAC |
+| `FFMPEG_PATH` | `PATH`, then the `imageio-ffmpeg` wheel | fallback assembly |
+| `TREND_SWARM_SIZE` / `TREND_SCRIPTS_SWARM_SIZE` / `TREND_CREATE_SWARM_SIZE` | 5 / see `.env.example` / 2 | researchers per Trends / Script / Create run (`0` turns off the Create swarm) |
+| `TREND_MODEL_ID`, `TREND_SEARCH_RESULTS`, `TREND_MAX_TOKENS`, `TREND_TOKEN_BUDGET`, `TREND_TIMEOUT_S` | see `.env.example` | research model and limits |
+| `MAX_USD_PER_TASK` | see `.env.example` | budget shared by trend research, images and video clips |
 
 The first attempts returned three 422 errors. See [Problems and fixes](#problems-and-fixes).
 
@@ -198,7 +212,7 @@ sokosumi --preprod tasks events 01a115be-d0ca-77d5-bf90-b98aa4487fec --json  # c
 
 This proves the execution path only. It does not prove payment.
 
-## 9. Masumi Payment Service on Preprod (IN PROGRESS)
+## 9. Masumi Payment Service on Preprod (VERIFIED)
 
 MPS gets its **own** database. It never shares one with app data.
 
@@ -255,16 +269,18 @@ curl -s http://127.0.0.1:38127/api/v1/health
 
 In this repo's `.env`: `MPS_URL=http://127.0.0.1:38127`, `MPS_PORT=38127`, `PAID_TASKS_ENABLED=false` until registration is confirmed.
 
-### 9.6 Remaining payment steps (TODO)
+### 9.6 Payment steps (VERIFIED 2026-10-07)
 
-1. Fund the selling wallet with test ADA from dispenser.masumi.network, and get test USDM.
-   - `TODO: seller address`
+1. Selling wallet funded with test ADA and test USDM. Seller address `addr_test1qqz6wglg8mvv7f0hrplymhw57z0d5u2jjxt9wt4u4hfvaxsfun3y53q6xrjtzwfwnzgl2urpxtx449wh3nw28crrrdrssejnde`, funding txs `a70a791880b55cae34a0cdf6756f0c5f37ba8325dad5ce63acc184f5da181d3a` and `9ae55b9f842a32c69c49a3774f0b61ae02c9d029ebe6f39ca2eb1cef0b885cd0`.
    - Token unit `16a55b2a349361ff88c03788f93e1e966e5d689605d044fef722ddde0014df10745553444d` (6 decimals; 1 tUSDM = `1000000`)
-2. Write `docs/payment-state.json` with `sourceId`, `walletId` and `sellerAddress`. It must contain no secrets.
-3. `node --env-file=.env --env-file=.env.local payment-registration.mjs key` creates a scoped runtime key. It is written only to `.local/mps-runtime.env`.
-4. Edit the registration body in `payment-registration.mjs` first. It still has the template's name, description, tags and author, so set PersonaLab values. Then run `... payment-registration.mjs register`, and poll with `... payment-registration.mjs` until `RegistrationConfirmed`. `TODO: agentIdentifier`
-5. Set `PAID_TASKS_ENABLED=true`, restart the worker, and create a paid Task. `TODO: paid Task ID`
-6. After unlock, collect, then check with `sokosumi runtime receipt TASK_ID --coworker-id ... --json`, and verify independently with Blockfrost (`settlement.mjs`). `TODO: collection tx hash, net receipt`
+2. `docs/payment-state.json` holds `sourceId`, `walletId`, `sellerAddress` and `sellerVkey`. No secrets.
+3. `payment-registration.mjs key` created a scoped runtime key (read + pay, Preprod only), written only to `.local/mps-runtime.env`.
+4. Registration body set to PersonaLab values; `register` then polling reached `RegistrationConfirmed`. Agent identifier `67ab0c92c4ac1610895a1c965ee50aba41a8f1513b15240723b3bd0b10648ac99be37c280788d2c1a9270b4960d342b1d4fb4a830b5beba022000000`, registration tx `ca5832b506f34a834a732eba2ff3f00cc52f2fb6bcf84016670deadc6af85dc1`.
+5. `agent-api.mjs` (MIP-003) smoke test passed: `docs/masumi-api-smoke.json`.
+6. `PAID_TASKS_ENABLED=true`, worker restarted, paid Task `01a115db-7a10-7148-8526-d516924c360c` reached `COMPLETED`. Escrow `ead8e54b…e019c` (`FundsLocked`), result `02b70f55…41b7` (`ResultSubmitted`), collection `ec5b8dad…3bc3` (`Withdrawn`).
+7. `sokosumi runtime receipt` → `settled: true`; `settlement.mjs` (Blockfrost UTxOs) → seller net receipt **1 tUSDM**. Full record: `docs/paid-proof.json`.
+
+Pay-by window: use at least 15 minutes for `payByTime`. A 5-minute window expired before the buyer's escrow lock landed (problem 13).
 
 ---
 
@@ -284,3 +300,8 @@ In this repo's `.env`: `MPS_URL=http://127.0.0.1:38127`, `MPS_PORT=38127`, `PAID
 | 10 | MPS could not start: Docker daemon not running | Docker Desktop was installed but not started | Start Docker Desktop, then `docker info` |
 | 11 | MPS needs a different pnpm version from the global one (global was 10.24.0) | MPS pins its package manager | `corepack prepare pnpm@10.30.2 --activate` |
 | 12 | Risk of wallet secrets in logs | The MPS seed prints wallet material | Run the seed with stdout and stderr sent to null (section 9.4) |
+| 13 | First paid-Task terms expired; no `FundsLocked` before `payByTime` | `payByTime` was only +5 min, too short for the buyer's lock tx to confirm | Issued fresh terms on the **same** Task with `payByTime` +15 min; escrow locked, result submitted and collected |
+| 14 | MPS `POST /registry` → HTTP 400 (description too long) | The registry `description` field allows at most 250 characters | Shortened the description; no record was created by the failed call, so the pending write was cleared before retrying |
+| 15 | `agent-api.mjs` `/start_job` response missing `sellerVKey` | The response did not include the seller's verification key | `sellerVkeyOf()` in `agent-api.mjs` takes the payment's `SmartContractWallet.walletVkey`, then the registry record's vkey; the smoke test now reports `missingFields: []` |
+| 16 | Worker process exited with code 127 (command not found) | The worker's shell could not resolve a command it launched | Restarted the worker (`npm run worker`); the per-Task journal in `.local/` resumed without repeating any step |
+| 17 | Image model returned a safety-filter rejection for a keyframe | The prompt used negated wording (e.g. "not a real person", "no ...") that the filter read as the forbidden content | `media.py` strips negated blocked terms from the prompt and states the requirement positively ("depict only the original, fictional AI-generated character") |
