@@ -21,3 +21,5 @@ dist
 # Large submission media, not needed at runtime.
 docs/demo/*.mp4
 docs/deck
+# Tests are not shipped.
+*.test.mjs

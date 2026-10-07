@@ -11,6 +11,7 @@ ENV PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     HOSTED=1 \
+    PORT=8080 \
     CREST_GRAPH_HOST=:: \
     DATA_DIR=/data \
     FFMPEG_PATH=/usr/bin/ffmpeg \
