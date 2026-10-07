@@ -35,6 +35,20 @@ export function collectTasks(targets,listTasks,coworkerId,onError=()=>{}){
  }
  return [...byId.values()];
 }
+// Coworker-key listing (fetchTasks with SOKOSUMI_COWORKER_API_KEY) returns every Task assigned to the Coworker across
+// workspaces in one call. organizationId null maps to the personal target, an org id to the configured org target.
+// Tasks in a workspace WORKER_TARGETS does not select are skipped, as with the per-target CLI listing.
+export function routeTasks(tasks,targets,coworkerId,onSkip=()=>{}){
+ const byId=new Map();
+ for(const t of tasks??[]){
+  if(!t?.id||byId.has(t.id))continue;
+  if(t.coworkerId!=null&&t.coworkerId!==coworkerId)continue;
+  const target=targets.find(target=>taskMatchesTarget(t,target));
+  if(!target){onSkip(t);continue;}
+  byId.set(t.id,{task:t,target});
+ }
+ return [...byId.values()];
+}
 // A resumed Task keeps the target recorded in its journal. Journals written before targets existed were personal.
 export function resolveTaskTarget(state,polledTarget){
  if(state?.target)return parseTarget(state.target);

@@ -1,13 +1,14 @@
 import {readFileSync,writeFileSync,existsSync} from 'node:fs';
 import {followUp} from './client.mjs';
-import {loadSokosumiRuntime} from './sokosumi-runtime.mjs';
-const {readRuntimeCredential,createCoworkerHttpClient,fetchTaskEvents,createTaskEvent}=await loadSokosumiRuntime();
-const runtime=createCoworkerHttpClient({apiKey:readRuntimeCredential(process.env.COWORKER_ID)});
+import {coworkerApiKey,loadSokosumiRuntime} from './sokosumi-runtime.mjs';
+import {dataPath} from './runtime-env.mjs';
+const {createCoworkerHttpClient,fetchTaskEvents,createTaskEvent}=await loadSokosumiRuntime();
+const runtime=createCoworkerHttpClient({apiKey:await coworkerApiKey()});
 export async function reply(taskId){
- const p=`.local/${taskId}-comments.json`;
+ const p=dataPath(`${taskId}-comments.json`);
  const state=existsSync(p)?JSON.parse(readFileSync(p,'utf8')):{};
  const {events}=await fetchTaskEvents(runtime,taskId,AbortSignal.timeout(30000));
- const sessionFile=`.local/${taskId}-session.json`;
+ const sessionFile=dataPath(`${taskId}-session.json`);
  if(!existsSync(sessionFile))return;
  for(const event of events.filter(e=>e.actor?.type==='user'&&typeof e.comment==='string'&&e.comment.trim())){
  if(state[event.id])continue;

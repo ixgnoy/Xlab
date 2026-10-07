@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { registrationBody, requireSavedRuntimeToken } from './registration-config.mjs';
+import { mpsRuntimeTokenFile } from './runtime-env.mjs';
 const statePath = 'docs/registration-state.json';
 const paymentStatePath = process.env.PAYMENT_STATE_PATH || 'docs/payment-state.json';
 if (!fs.existsSync(paymentStatePath)) throw Error(`${paymentStatePath} is missing: record PersonaLab's dedicated sourceId, walletId and sellerAddress first`);
@@ -10,13 +11,13 @@ const base=process.env.MPS_URL+'/api/v1';
 const headers={token:process.env.ADMIN_KEY,'content-type':'application/json'};
 async function request(path,body){const r=await fetch(base+path,{headers,method:body?'POST':'GET',body:body?JSON.stringify(body):undefined});const j=await r.json();if(!r.ok||j.status!=='success')throw Error(`${r.status}: ${JSON.stringify(j.error??j.message??{})}`);return j.data;}
 if(process.argv[2]==='key'){
- if(state.runtimeKeyId){requireSavedRuntimeToken('.local/mps-runtime.env');console.log('Runtime key already saved',state.runtimeKeyId);process.exit(0);}
+ if(state.runtimeKeyId){requireSavedRuntimeToken(mpsRuntimeTokenFile());console.log('Runtime key already saved',state.runtimeKeyId);process.exit(0);}
  if(state.keyWritePending)throw Error('Previous key write uncertain; inspect API key records before retry');
  state.keyWritePending=true;save();
  const key=await request('/api-key',{usageLimited:'false',UsageCredits:[],NetworkLimit:['Preprod'],ChainIdLimit:[],canRead:true,canPay:true,canAdmin:false,walletScopeEnabled:true,WalletScopeHotWalletIds:[payment.walletId],x402WalletScopeEnabled:true,X402WalletScopeEvmWalletIds:[]});
  state.runtimeKeyId=key.id;state.keyWritePending=false;save();
  if(typeof key.token!=='string'||key.token.startsWith('*****'))throw Error('Created key token was not revealed; key ID preserved for supported token update');
- fs.writeFileSync('.local/mps-runtime.env',`MPS_RUNTIME_TOKEN=${key.token}\n`,{mode:0o600});
+ fs.writeFileSync(mpsRuntimeTokenFile(),`MPS_RUNTIME_TOKEN=${key.token}\n`,{mode:0o600});
  state.runtimeKeyId=key.id;state.keyWritePending=false;state.keyEvidence={canRead:key.canRead,canPay:key.canPay,canAdmin:key.canAdmin,NetworkLimit:key.NetworkLimit,walletScopeEnabled:key.walletScopeEnabled,WalletScopeHotWalletIds:key.WalletScopeHotWalletIds};save();console.log('Runtime key created',key.id,JSON.stringify(state.keyEvidence));
 }else if(process.argv[2]==='register'){
  if(state.registrationId){console.log('Registration already saved',state.registrationId);process.exit(0);}
