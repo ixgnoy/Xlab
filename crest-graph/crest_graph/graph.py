@@ -1,4 +1,4 @@
-"""PersonaLab supervisor graph: routes a request to the Create, Schedule, Engage or Analyze agents.
+"""PersonaLab supervisor graph: routes a request to the Create, Schedule, Engage, Analyze, Trends or Scripts agents.
 
 The Create path ends with media_agent, which renders the persona reference portrait and photo concepts.
 Instagram and approval tools attach to these same nodes in later phases.
@@ -12,12 +12,19 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 
-from . import config, ig_workflows, media, prompts
+from . import config, ig_workflows, media, prompts, trends
 
-Stage = Literal["create", "schedule", "engage", "analyze"]
-STAGES: tuple[Stage, ...] = ("create", "schedule", "engage", "analyze")
-STAGE_TAG = re.compile(r"\[stage:(create|schedule|engage|analyze)\]", re.IGNORECASE)
-TITLES = {"create": "Create", "schedule": "Schedule", "engage": "Engage", "analyze": "Analyze"}
+Stage = Literal["create", "schedule", "engage", "analyze", "trends", "scripts"]
+STAGES: tuple[Stage, ...] = ("create", "schedule", "engage", "analyze", "trends", "scripts")
+STAGE_TAG = re.compile(r"\[stage:(create|schedule|engage|analyze|trends|scripts)\]", re.IGNORECASE)
+TITLES = {
+    "create": "Create",
+    "schedule": "Schedule",
+    "engage": "Engage",
+    "analyze": "Analyze",
+    "trends": "Trend Analyzer",
+    "scripts": "Trend-based Script Writer",
+}
 
 
 class CrestState(TypedDict, total=False):
@@ -26,6 +33,8 @@ class CrestState(TypedDict, total=False):
     persona: str
     sections: list[str]
     output: str
+    trends: list[dict]  # written by the trend swarm subgraph
+    trend_report: str
 
 
 def parse_stage(text: str) -> Stage | None:
@@ -84,8 +93,11 @@ def build_graph(
     model: BaseChatModel,
     checkpointer: BaseCheckpointSaver | None = None,
     image_generator: ImageGenerator | None = None,
+    trend_searcher: trends.Searcher | None = None,
+    page_fetcher: trends.PageFetcher | None = None,
 ):
     generate = image_generator or media.generate_images
+    trend_swarm = trends.build_trend_graph(trend_searcher, page_fetcher)
 
     def ask(system: str, user: str) -> str:
         return _text(model.invoke([SystemMessage(system), HumanMessage(user)]))
@@ -129,6 +141,14 @@ def build_graph(
         data, source = ig_workflows.analyst_input(brief(state))
         return {"sections": [ask(prompts.ANALYST, data), f"## Data source\n{source}"]}
 
+    def trend_writer(state: CrestState) -> CrestState:
+        return {"sections": [state.get("trend_report", "")]}
+
+    def script_writer(state: CrestState) -> CrestState:
+        analysis = state.get("trend_report", "")
+        scripts = ask(prompts.SCRIPT_WRITER, f"{brief(state)}\n\n---\n# Trend analysis\n{analysis}")
+        return {"sections": [scripts, "# Trend analysis used\n\n" + analysis]}
+
     def finalize(state: CrestState) -> CrestState:
         header = f"# PersonaLab - {TITLES[state['stage']]}"
         return {"output": "\n\n".join([header, *state["sections"]]).strip() + "\n"}
@@ -141,16 +161,31 @@ def build_graph(
     graph.add_node("scheduler_agent", scheduler_agent)
     graph.add_node("engage_agent", engage_agent)
     graph.add_node("analyst_agent", analyst_agent)
+    graph.add_node("trend_swarm", trend_swarm)  # compiled subgraph: Send fan-out to parallel researchers
+    graph.add_node("trend_writer", trend_writer)
+    graph.add_node("script_writer", script_writer)
     graph.add_node("finalize", finalize)
     graph.add_edge(START, "supervisor")
     graph.add_conditional_edges(
         "supervisor",
         lambda state: state["stage"],
-        {"create": "persona_agent", "schedule": "scheduler_agent", "engage": "engage_agent", "analyze": "analyst_agent"},
+        {
+            "create": "persona_agent",
+            "schedule": "scheduler_agent",
+            "engage": "engage_agent",
+            "analyze": "analyst_agent",
+            "trends": "trend_swarm",
+            "scripts": "trend_swarm",
+        },
+    )
+    graph.add_conditional_edges(
+        "trend_swarm",
+        lambda state: "script_writer" if state["stage"] == "scripts" else "trend_writer",
+        ["script_writer", "trend_writer"],
     )
     graph.add_edge("persona_agent", "content_agent")
     graph.add_edge("content_agent", "media_agent")
-    for node in ("media_agent", "scheduler_agent", "engage_agent", "analyst_agent"):
+    for node in ("media_agent", "scheduler_agent", "engage_agent", "analyst_agent", "trend_writer", "script_writer"):
         graph.add_edge(node, "finalize")
     graph.add_edge("finalize", END)
     return graph.compile(checkpointer=checkpointer)

@@ -164,9 +164,11 @@ sokosumi --preprod coworkers update 01a1156a-dbc8-7360-813b-043c0e148296 --metad
 
 This creates four cards. Each prompt starts with a stage tag, and the supervisor routes on that tag:
 - Create (`[stage:create]`, outputs doc + image)
-- Schedule (`[stage:schedule]`, sheet)
-- Engage (`[stage:engage]`, doc)
+- Script: Trend-based Reels & TikToks (`[stage:scripts]`, doc) - runs a 3-agent trend swarm, then writes scripts
+- Trends: What's Hot on TikTok & Reels (`[stage:trends]`, doc) - parallel research swarm with cited sources
 - Analyze (`[stage:analyze]`, pdf)
+
+Sokosumi cannot link to Instagram/TikTok accounts, so the `[stage:schedule]` and `[stage:engage]` stages are not offered as cards. They still work in the graph when tagged directly.
 
 The first attempts returned three 422 errors. See [Problems and fixes](#problems-and-fixes).
 
