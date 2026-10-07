@@ -122,7 +122,7 @@ def run_media(persona: str, content: str, generator: ImageGenerator) -> MediaOut
         files, reason = error.files, error.reason
     except Exception as error:  # never surface request details or credentials
         reason = f"image generation failed ({type(error).__name__})"
-    base = f"http://127.0.0.1:{config.get('CREST_GRAPH_PORT', '21951')}"
+    base = config.media_base_url()
     lines = [heading, ""]
     records = []
     for index, item in enumerate(files):
@@ -130,11 +130,17 @@ def run_media(persona: str, content: str, generator: ImageGenerator) -> MediaOut
         lines.append(f"{index + 1}. {label}: {base}{item.url_path} (sha256 `{item.sha256}`)")
         records.append({"path": str(item.path), "label": label, "scene": index - 1 if scenes and index else None, "cost": item.cost_usd})
     if files:
-        lines += ["", "Images are AI-generated; disclose this in captions and bio. Local URLs are served on loopback only."]
+        lines += ["", "Images are AI-generated; disclose this in captions and bio. " + _url_note("URLs")]
     if reason:
         lines += (["", f"media not generated: {reason}"] if not files else ["", f"media not generated for the remaining prompts: {reason}"])
     cost = sum(f.cost_usd for f in files if f.cost_usd is not None)
     return MediaOutcome("\n".join(lines).strip(), run_id, records, round(cost, 4))
+
+
+def _url_note(noun: str) -> str:
+    if config.media_public() and config.media_base_url() != f"http://127.0.0.1:{config.graph_port()}":
+        return f"The media {noun} are public links; anyone with the link can open them." if noun.endswith("s") else f"The media {noun} is a public link; anyone with the link can open it."
+    return f"Local {noun} are served on loopback only." if noun.endswith("s") else f"The local {noun} is served on loopback only."
 
 
 def media_section(persona: str, content: str, generator: ImageGenerator) -> str:
@@ -186,7 +192,7 @@ def video_section(state: dict, maker: VideoMaker) -> str:
         return "\n".join([*head, trend_line, "", f"video not generated: {error.reason}"])
     except Exception as error:  # never surface request details or credentials
         return "\n".join([*head, trend_line, "", f"video not generated: video build failed ({type(error).__name__})"])
-    base = f"http://127.0.0.1:{config.get('CREST_GRAPH_PORT', '21951')}"
+    base = config.media_base_url()
     total = trend_cost + media_cost + result.cost_usd
     lines = [
         *head,
@@ -195,7 +201,8 @@ def video_section(state: dict, maker: VideoMaker) -> str:
         f"- Path used: {result.path_used}",
         f"- Voiceover: {result.voice}",
         trend_line,
-        f"- File: `{result.path}` (sha256 `{result.sha256}`)",
+        # Hosted results never expose server file paths.
+        f"- SHA-256: `{result.sha256}`" if config.hosted() else f"- File: `{result.path}` (sha256 `{result.sha256}`)",
         f"- Cost: video ${result.cost_usd:.3f}; task total about ${total:.3f} (trends ${trend_cost:.3f}, images ${media_cost:.3f}) "
         f"of MAX_USD_PER_TASK=${limit:.2f}",
         "",
@@ -206,7 +213,7 @@ def video_section(state: dict, maker: VideoMaker) -> str:
         lines.append(f"| {scene.index + 1} | {scene.start:g}-{scene.end:g}s | {scene.on_screen.replace('|', '/') or '-'} | {source} |")
     if result.notes:
         lines += ["", "Notes:", *(f"- {note}" for note in result.notes)]
-    lines += ["", DISCLOSURE, "The local URL is served on loopback only; upload the MP4 yourself when publishing."]
+    lines += ["", DISCLOSURE, _url_note("URL") + " Upload the MP4 yourself when publishing."]
     return "\n".join(lines).strip()
 
 

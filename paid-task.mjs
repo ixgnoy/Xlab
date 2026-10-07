@@ -1,8 +1,8 @@
 import {createHash,randomBytes} from 'node:crypto';
 import {readFileSync,existsSync,writeFileSync} from 'node:fs';
-import {parseEnv} from 'node:util';
 import {verifySettlement} from './settlement.mjs';
-import {loadSokosumiRuntime} from './sokosumi-runtime.mjs';
+import {coworkerApiKey,loadSokosumiRuntime} from './sokosumi-runtime.mjs';
+import {dataPath,mpsRuntimeToken} from './runtime-env.mjs';
 const MINUTE=60*1000;
 // Payment windows in minutes. Core's buyer needed more than 5 minutes to lock escrow for a freshly registered agent.
 const W={payBy:Number(process.env.PAID_PAY_BY_MIN??15),submit:Number(process.env.PAID_SUBMIT_MIN??40),unlock:Number(process.env.PAID_UNLOCK_MIN??56),dispute:Number(process.env.PAID_DISPUTE_MIN??72)};
@@ -27,7 +27,7 @@ export function purchasePayload(payment,nonce,registration){
  PaymentSource:{network:'Preprod',smartContractAddress:payment.PaymentSource.smartContractAddress,policyId:payment.PaymentSource.policyId}};
 }
 export function isPaidReady(){
- if(!existsSync('docs/registration-state.json')||!existsSync('.local/mps-runtime.env'))return false;
+ if(!existsSync('docs/registration-state.json')||!mpsRuntimeToken())return false;
  const r=JSON.parse(readFileSync('docs/registration-state.json','utf8'));
  return r.status==='RegistrationConfirmed'||r.registrationState==='RegistrationConfirmed'||r.registration?.state==='RegistrationConfirmed';
 }
@@ -35,15 +35,15 @@ export async function createPaidAdapter({save,answer,core:providedCore,mps:provi
  const registration=()=>providedRegistration??JSON.parse(readFileSync('docs/registration-state.json','utf8'));
  let core=providedCore;
  async function getCore(){
-  if(!core){const {readRuntimeCredential,createCoworkerHttpClient}=await loadSokosumiRuntime();
-   core=createCoworkerHttpClient({apiKey:readRuntimeCredential(process.env.COWORKER_ID)});}
+  if(!core){const {createCoworkerHttpClient}=await loadSokosumiRuntime();
+   core=createCoworkerHttpClient({apiKey:await coworkerApiKey()});}
   return core;
  }
  async function mps(path,body){
   if(providedMps)return providedMps(path,body);
-  const env=parseEnv(readFileSync('.local/mps-runtime.env','utf8'));
+  const token=mpsRuntimeToken();if(!token)throw new Error('MPS runtime token is not configured');
   const response=await fetch(`${process.env.MPS_URL}${path}`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(30000),
-   headers:{'Content-Type':'application/json',token:env.MPS_RUNTIME_TOKEN},body:JSON.stringify(body)});
+   headers:{'Content-Type':'application/json',token},body:JSON.stringify(body)});
   const data=await response.json();
   if(!response.ok||data.status!=='success')throw new Error(`MPS ${path} failed HTTP ${response.status}. Inspect saved state before retry.`);
   return data.data;
@@ -77,9 +77,9 @@ export async function createPaidAdapter({save,answer,core:providedCore,mps:provi
     if(Date.now()>=Number(p.payment.submitResultTime))throw new Error('Result deadline expired before model');
     state=await persist(task,state,{...p,stage:'model-pending'});
     if(Date.now()>=Number(p.payment.submitResultTime))throw new Error('Result deadline expired before model send');
-    const result=await answer(state.input,`.local/${task.id}-session.json`,Number(p.payment.submitResultTime));
+    const result=await answer(state.input,dataPath(`${task.id}-session.json`),Number(p.payment.submitResultTime));
     if(typeof result!=='string'||!result.trim())throw new Error('Model did not return a result');
-    writeFileSync(`.local/${task.id}.txt`,result,{mode:0o600});
+    writeFileSync(dataPath(`${task.id}.txt`),result,{mode:0o600});
     return persist(task,state,{...p,stage:'result-saved',result,resultHash:taskHash(result)});
    }
    if(p.stage==='awaiting-result'&&observed.resultHash===p.resultHash&&confirmedState(observed,'ResultSubmitted')&&observed.onChainState==='ResultSubmitted')return persist(task,state,{...p,stage:'complete-ready'});

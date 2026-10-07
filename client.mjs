@@ -1,7 +1,18 @@
 import {randomUUID} from 'node:crypto';
 import {readFileSync,writeFileSync} from 'node:fs';
+import {isHosted} from './runtime-env.mjs';
 // Agent client: the PersonaLab LangGraph service (crest-graph) replaces eve. Same exported interface as before.
-const base=()=>{const url=new URL(process.env.CREST_GRAPH_URL??'http://127.0.0.1:21951');if(url.protocol!=='http:'||url.hostname!=='127.0.0.1')throw new Error('CREST_GRAPH_URL must be http://127.0.0.1:PORT');return url.origin;};
+// Local: strictly http://127.0.0.1:PORT. HOSTED=1: any http(s) origin, e.g. the private http://graph.railway.internal:8080.
+export function graphBaseUrl(env=process.env){
+ const url=new URL(env.CREST_GRAPH_URL??'http://127.0.0.1:21951');
+ if(isHosted(env)){
+  if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.pathname!=='/'||url.search||url.hash)throw new Error('CREST_GRAPH_URL must be an http(s) origin with no path, query or credentials');
+  return url.origin;
+ }
+ if(url.protocol!=='http:'||url.hostname!=='127.0.0.1')throw new Error('CREST_GRAPH_URL must be http://127.0.0.1:PORT');
+ return url.origin;
+}
+const base=()=>graphBaseUrl();
 const token=()=>{const t=process.env.CREST_GRAPH_TOKEN;if(!t)throw new Error('CREST_GRAPH_TOKEN is not configured');return t;};
 async function run(input,threadId,timeoutMs=Number(process.env.CREST_GRAPH_TIMEOUT_MS??600000)){
  const response=await fetch(`${base()}/run`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${token()}`},body:JSON.stringify({input,thread_id:threadId}),signal:AbortSignal.timeout(timeoutMs)});

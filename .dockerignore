@@ -1,0 +1,25 @@
+# Secrets and local state never enter an image.
+.env
+.env.*
+.local
+**/.local
+# Dependencies and tool state are rebuilt inside the image.
+node_modules
+**/node_modules
+.venv
+**/.venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+**/.pytest_cache
+.claude
+.git
+.eve
+.workflow
+.output
+dist
+# Large submission media, not needed at runtime.
+docs/demo/*.mp4
+docs/deck
+# Tests are not shipped.
+*.test.mjs

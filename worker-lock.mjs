@@ -1,11 +1,12 @@
 import {openSync,writeFileSync,closeSync,readFileSync,unlinkSync,mkdirSync,chmodSync,fstatSync,statSync} from 'node:fs';
 import {dirname} from 'node:path';
+import {dataPath} from './runtime-env.mjs';
 function owner(path){
  const text=readFileSync(path,'utf8');
  if(!/^[1-9][0-9]*$/.test(text)||!Number.isSafeInteger(Number(text)))throw new Error('Worker lock owner is invalid. Inspect the lock before recovery.');
  return Number(text);
 }
-export function acquireWorkerLock(path='.local/worker.lock'){
+export function acquireWorkerLock(path=dataPath('worker.lock')){
  const directory=dirname(path);mkdirSync(directory,{recursive:true,mode:0o700});chmodSync(directory,0o700);
  const recovery=`${path}.recovery`;
  let guard;

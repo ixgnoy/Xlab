@@ -84,8 +84,9 @@ def _is_loopback(host: str | None) -> bool:
 
 @app.get("/media/{run_id}/{name}")
 def media_file(run_id: str, name: str, request: Request) -> FileResponse:
-    # Loopback only: the files are local previews for the operator, never a public CDN.
-    if not _is_loopback(request.client.host if request.client else None):
+    # Loopback only by default: local previews for the operator. MEDIA_PUBLIC=1 (hosted) lets Task readers open the
+    # links; name validation and traversal protection below still apply, so only generated images and reel.mp4 serve.
+    if not config.media_public() and not _is_loopback(request.client.host if request.client else None):
         raise HTTPException(403, "Media is served on loopback only")
     path = media.resolve_media_file(run_id, name)
     if path is None:
@@ -111,7 +112,8 @@ def approve_drafts(request: ApproveRequest) -> dict:
 
 
 def main() -> None:
-    uvicorn.run(app, host="127.0.0.1", port=int(config.get("CREST_GRAPH_PORT", "21951")), log_level="info")
+    # Local default 127.0.0.1:21951. Hosted: CREST_GRAPH_HOST=0.0.0.0 (or :: for Railway private IPv6) and PORT.
+    uvicorn.run(app, host=config.graph_host(), port=config.graph_port(), log_level="info")
 
 
 if __name__ == "__main__":

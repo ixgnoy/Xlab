@@ -7,7 +7,8 @@ Strategy (each step degrades instead of failing):
 2. Voiceover per scene: OpenRouter TTS (/api/v1/audio/speech) -> Windows built-in TTS (System.Speech) -> silence.
 3. ffmpeg assembles everything: 9:16 H.264 + AAC, crossfades, burned-in captions inside the Reels safe area.
 
-The final file is PROJECT_DIR/.local/media/<run_id>/reel.mp4, served read-only on loopback by GET /media/<run>/reel.mp4.
+The final file is DATA_DIR/media/<run_id>/reel.mp4 (default PROJECT_DIR/.local), served read-only by GET /media/<run>/reel.mp4
+(loopback only unless MEDIA_PUBLIC=1).
 Intermediate files live in a `work/` sub-folder that the media route never serves and that is removed afterwards.
 """
 from __future__ import annotations

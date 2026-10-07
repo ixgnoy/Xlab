@@ -2,7 +2,8 @@
 
 The first prompt produces the persona reference portrait; every later prompt sends that portrait (or the
 caller's reference) back as an input image so the character stays consistent. Files are written to
-PROJECT_DIR/.local/media/<run_id>/ and served read-only by GET /media/{run_id}/{name} on loopback.
+DATA_DIR/media/<run_id>/ (default PROJECT_DIR/.local) and served read-only by GET /media/{run_id}/{name} on loopback
+(or publicly when MEDIA_PUBLIC=1).
 """
 import base64
 import binascii
@@ -93,7 +94,7 @@ class Budget:
 
 
 def media_root() -> Path:
-    return config.PROJECT_DIR / ".local" / "media"
+    return config.data_dir() / "media"
 
 
 def resolve_media_file(run_id: str, name: str) -> Path | None:

@@ -6,8 +6,9 @@ import {pathToFileURL} from 'node:url';
 import {answer as defaultAnswer} from './client.mjs';
 import {inputHash,resultHash,sha256} from './standard-hash.mjs';
 import {confirmedState} from './paid-task.mjs';
+import {dataPath,mpsRuntimeToken} from './runtime-env.mjs';
 export async function mps(path,body){
- const response=await fetch(process.env.MPS_URL+'/api/v1'+path,{method:body?'POST':'GET',headers:{token:process.env.MPS_RUNTIME_TOKEN,'content-type':'application/json'},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(30000)});
+ const response=await fetch(process.env.MPS_URL+'/api/v1'+path,{method:body?'POST':'GET',headers:{token:mpsRuntimeToken(),'content-type':'application/json'},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(30000)});
  const data=await response.json();if(!response.ok)throw new Error(`Payment service HTTP ${response.status}`);return data.data;
 }
 // PersonaLab studio stages, in display order. Index order matters if a client submits option indices.
@@ -45,7 +46,7 @@ const respond=(res,status,data)=>{res.writeHead(status,{'content-type':'applicat
 // MIP-003 sellerVKey: prefer the payment's own wallet, then the registry record shapes MPS returns.
 export const sellerVkeyOf=(reg,payment)=>payment?.SmartContractWallet?.walletVkey??reg?.sellerVkey??reg?.registration?.SmartContractWallet?.walletVkey??reg?.request?.sellingWalletVkey;
 const withHashAliases=r=>r.input_hash&&!r.inputHash?{...r,inputHash:r.input_hash}:r;
-export function createAgentApi({jobsDir='.local/standard-jobs',answer=defaultAnswer,mps:callMps=mps,registry=()=>JSON.parse(readFileSync('docs/registration-state.json','utf8')),now=Date.now}={}){
+export function createAgentApi({jobsDir=dataPath('standard-jobs'),answer=defaultAnswer,mps:callMps=mps,registry=()=>JSON.parse(readFileSync('docs/registration-state.json','utf8')),now=Date.now}={}){
  mkdirSync(jobsDir,{recursive:true,mode:0o700});
  const save=job=>writeFileSync(`${jobsDir}/${job.id}.json`,JSON.stringify(job),{mode:0o600});
  const load=id=>JSON.parse(readFileSync(`${jobsDir}/${id}.json`,'utf8'));
@@ -98,9 +99,16 @@ export function createAgentApi({jobsDir='.local/standard-jobs',answer=defaultAns
  }
  return {handler,tick};
 }
+// Local default 127.0.0.1:21950. Hosted sets AGENT_API_HOST=0.0.0.0 and the platform injects PORT.
+export function listenAddress(env=process.env){
+ const host=String(env.AGENT_API_HOST??'').trim()||'127.0.0.1';
+ const port=Number(env.AGENT_API_PORT||env.PORT||21950);
+ if(!Number.isInteger(port)||port<1||port>65535)throw new Error('AGENT_API_PORT/PORT must be an integer from 1 to 65535');
+ return {host,port};
+}
 if(process.argv[1]&&pathToFileURL(resolve(process.argv[1])).href===import.meta.url){
- const port=Number(process.env.AGENT_API_PORT||21950);
+ const {host,port}=listenAddress();
  const {handler,tick}=createAgentApi();
- createServer(handler).listen(port,'127.0.0.1',()=>console.log('Agent API running',port));
+ createServer(handler).listen(port,host,()=>console.log('Agent API running',host,port));
  setInterval(tick,5000);
 }

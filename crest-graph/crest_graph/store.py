@@ -1,6 +1,6 @@
 """Local SQLite store for the publishing queue, the engagement inbox and insight snapshots.
 
-Default path: PROJECT_DIR/.local/personalab.db (override with PERSONALAB_DB).
+Default path: DATA_DIR/personalab.db (DATA_DIR defaults to PROJECT_DIR/.local) (override with PERSONALAB_DB).
 Publishing is idempotent: a row is atomically claimed as 'publishing' before any API call, the container id is
 saved before media_publish, and rows left in 'publishing' are inspected (not blindly retried) on the next run.
 """
@@ -71,7 +71,7 @@ def now_iso(moment: datetime | None = None) -> str:
 
 def default_path() -> Path:
     override = config.get("PERSONALAB_DB")
-    return Path(override) if override else config.PROJECT_DIR / ".local" / "personalab.db"
+    return Path(override) if override else config.data_dir() / "personalab.db"
 
 
 class Store:
