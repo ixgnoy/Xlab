@@ -55,4 +55,6 @@ test('payment: personal when enabled; organization only with PAID_ORG_TASKS and 
  assert.equal(wantsPayment({name:'Trends'},org,both),false);
  assert.equal(wantsPayment({name:'Trends [PAID]'},org,both),true);
  assert.equal(wantsPayment({name:'Trends [paid]'},org,{PAID_ORG_TASKS:'true'}),false);
+ assert.equal(wantsPayment({name:'Create video ads',description:'[Paid] Build an ad'},org,both),true);
+ assert.equal(wantsPayment({name:'Create video ads',description:'[BRIEFING.md](https://x)'},org,both),false);
 });
