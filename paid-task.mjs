@@ -4,8 +4,9 @@ import {verifySettlement} from './settlement.mjs';
 import {coworkerApiKey,loadSokosumiRuntime} from './sokosumi-runtime.mjs';
 import {dataPath,mpsRuntimeToken} from './runtime-env.mjs';
 const MINUTE=60*1000;
-// Payment windows in minutes. Core's buyer needed more than 5 minutes to lock escrow for a freshly registered agent.
-const W={payBy:Number(process.env.PAID_PAY_BY_MIN??15),submit:Number(process.env.PAID_SUBMIT_MIN??40),unlock:Number(process.env.PAID_UNLOCK_MIN??56),dispute:Number(process.env.PAID_DISPUTE_MIN??72)};
+// Payment windows in minutes, 2 minutes apart (demo timing). Deadlines must stay in this order.
+// Core's buyer once needed more than 5 minutes to lock escrow; raise PAID_PAY_BY_MIN if terms expire unlocked.
+const W={payBy:Number(process.env.PAID_PAY_BY_MIN??2),submit:Number(process.env.PAID_SUBMIT_MIN??4),unlock:Number(process.env.PAID_UNLOCK_MIN??6),dispute:Number(process.env.PAID_DISPUTE_MIN??8)};
 export const USDM='16a55b2a349361ff88c03788f93e1e966e5d689605d044fef722ddde0014df10745553444d';
 export function taskHash(text){return createHash('sha256').update(text,'utf8').digest('hex')}
 export function confirmedState(payment,expected){
