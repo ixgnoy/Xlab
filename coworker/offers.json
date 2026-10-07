@@ -1,6 +1,18 @@
 {
   "offers": [
     {
+      "title": "Onboarding: Build Your Virtual Avatar",
+      "category": "Onboarding",
+      "description": "Builds a virtual avatar of you, the real creator, from your interests, values, story, expertise and moat, so your audience feels it is personal and authentic rather than a generic bot. Includes voice, visual identity, positioning, AI-disclosure guardrails, first video ideas and a reusable Avatar JSON for later Create and Script tasks.",
+      "deliverable": "Avatar profile, voice and speaking style, visual identity with reference prompt, moat and positioning, authenticity guardrails, content pillars with 5 video ideas, reusable Avatar JSON",
+      "prompt": "[stage:onboarding] Build my virtual avatar.\nName / handle: \nNiche: \n5 interests: \nValues: \nPersonal story / origin: \nExpertise (only what is true): \nSignature phrases or humor style: \nLikes / dislikes: \nAudience: \nMoat (your unfair advantage): \nBoundaries (topics to avoid): \nLook preferences (style, palette; not a photo of anyone else; say if the look may be inspired by you): \nVoice preferences (tone, pace, accent): ",
+      "outputs": [
+        {
+          "type": "doc"
+        }
+      ]
+    },
+    {
       "title": "Create: Launch an AI Influencer",
       "category": "Create",
       "description": "Design an original AI influencer persona and its first content: persona card, 3 on-brand photo concepts, an 8-second reel script, and a 7-day post plan.",
@@ -38,37 +50,25 @@
           "type": "doc"
         }
       ]
-    },
-    {
-      "title": "Onboarding: Build Your Virtual Avatar",
-      "category": "Onboarding",
-      "description": "Builds a virtual avatar of you, the real creator, from your interests, values, story, expertise and moat, so your audience feels it is personal and authentic rather than a generic bot. Includes voice, visual identity, positioning, AI-disclosure guardrails, first video ideas and a reusable Avatar JSON for later Create and Script tasks.",
-      "deliverable": "Avatar profile, voice and speaking style, visual identity with reference prompt, moat and positioning, authenticity guardrails, content pillars with 5 video ideas, reusable Avatar JSON",
-      "prompt": "[stage:onboarding] Build my virtual avatar.\nName / handle: \nNiche: \n5 interests: \nValues: \nPersonal story / origin: \nExpertise (only what is true): \nSignature phrases or humor style: \nLikes / dislikes: \nAudience: \nMoat (your unfair advantage): \nBoundaries (topics to avoid): \nLook preferences (style, palette; not a photo of anyone else; say if the look may be inspired by you): \nVoice preferences (tone, pace, accent): ",
-      "outputs": [
-        {
-          "type": "doc"
-        }
-      ]
     }
   ],
   "profile": {
     "llm": [
-      "DeepSeek V4.1 Flash via OpenRouter",
+      "DeepSeek V4.1 Flash (DeepSeek API, OpenRouter fallback)",
       "DeepSeek V4.1 Flash with OpenRouter web search (trend research)"
     ],
     "hosting": "Operator-hosted LangGraph service",
     "capabilities": [
+      "Personal virtual avatar onboarding",
       "AI persona design",
       "Trend research with cited sources",
-      "Trend-based Reel and TikTok scripts",
-      "Performance analysis"
+      "Trend-based Reel and TikTok scripts"
     ],
     "examples": [
+      "Turn my interests and story into a personal AI avatar",
       "Launch a faceless fitness-coach AI influencer",
       "What is trending on TikTok and Reels for fitness this week?",
-      "Write 3 trend-based Reels for a personal-finance persona",
-      "Explain why last week's Reels underperformed"
+      "Write 3 trend-based Reels for a personal-finance persona"
     ]
   },
   "channels": {}
