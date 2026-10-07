@@ -30,9 +30,9 @@ EST_TEXT_INPUT_TOKENS = 500
 EST_REFERENCE_INPUT_TOKENS = 1300
 
 RUN_ID = re.compile(r"^[0-9a-f]{32}$")
-FILE_NAME = re.compile(r"^[0-9]{2}-[0-9a-f]{16}\.(png|jpg|webp)$")
+FILE_NAME = re.compile(r"^(?:[0-9]{2}-[0-9a-f]{16}\.(?:png|jpg|webp)|reel\.mp4)$")  # images + the Create reel only
 MIME_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
-EXT_MIME = {ext: mime for mime, ext in MIME_EXT.items()}
+EXT_MIME = {**{ext: mime for mime, ext in MIME_EXT.items()}, "mp4": "video/mp4"}
 
 SAFETY_SUFFIX = (
     "\n\nStyle and safety requirements: depict only the original, fictional AI-generated character described "
@@ -44,8 +44,11 @@ CONSISTENCY_NOTE = (
     "Use the attached reference image as the same fictional character: keep face, hair, skin tone, and overall "
     "look identical while following the new scene below.\n\n"
 )
-BLOCKED = re.compile(
-    r"\b(look[- ]?alike|deep[- ]?fake|doppelg[aä]nger|celebrity|impersonat\w*|face[- ]?swap|real person)\b",
+_BLOCKED_TERMS = r"\b(look[- ]?alike|deep[- ]?fake|doppelg[aä]nger|celebrit(?:y|ies)|impersonat\w*|face[- ]?swap|real (?:person|people))\b"
+BLOCKED = re.compile(_BLOCKED_TERMS, re.IGNORECASE)
+# Safety phrasing such as "not based on any real person" or "Negative: celebrity likeness" is not a request.
+NEGATED = re.compile(
+    r"(?:\b(?:not|no|never|without|nor|avoid\w*|don't|do not)\b|\bnegative(?: prompt)?\s*:)[^.,;\n]{0,60}?" + _BLOCKED_TERMS,
     re.IGNORECASE,
 )
 
@@ -154,7 +157,7 @@ def fetch_pricing(client: httpx.Client, model: str) -> dict | None:
 
 def build_budget(client: httpx.Client, model: str) -> Budget:
     limit = _float_env("MAX_USD_PER_TASK", 3.0)
-    max_images = _int_env("MAX_IMAGES", 4)
+    max_images = _int_env("MAX_IMAGES", 7)  # Create: reference portrait + up to 6 scene keyframes
     override = config.get("IMAGE_USD_PER_IMAGE")
     if override:
         return Budget(model, _float_env("IMAGE_USD_PER_IMAGE", DEFAULT_USD_PER_IMAGE), limit, max_images)
@@ -225,7 +228,9 @@ def _api_error(response: httpx.Response) -> str:
     return f"OpenRouter HTTP {response.status_code}" + (f": {message}" if message else "")
 
 
-def _request_image(client: httpx.Client, api_key: str, model: str, prompt: str, reference: bytes | None) -> tuple[bytes, float | None]:
+def _request_image(
+    client: httpx.Client, api_key: str, model: str, prompt: str, reference: bytes | None, aspect_ratio: str | None = None
+) -> tuple[bytes, float | None]:
     text = (CONSISTENCY_NOTE if reference else "") + prompt + SAFETY_SUFFIX
     content: list[dict] = [{"type": "text", "text": text}]
     if reference:
@@ -234,7 +239,7 @@ def _request_image(client: httpx.Client, api_key: str, model: str, prompt: str, 
         "model": model,
         "messages": [{"role": "user", "content": content}],
         "modalities": ["image", "text"],
-        "image_config": {"aspect_ratio": config.get("IMAGE_ASPECT_RATIO", "4:5")},
+        "image_config": {"aspect_ratio": aspect_ratio or config.get("IMAGE_ASPECT_RATIO", "4:5")},
         "usage": {"include": True},
     }
     response = client.post(
@@ -274,7 +279,7 @@ def check_prompt(prompt: str) -> str:
     cleaned = " ".join(prompt.split())[:MAX_PROMPT_CHARS]
     if not cleaned:
         raise MediaError("empty image prompt")
-    hit = BLOCKED.search(cleaned)
+    hit = BLOCKED.search(NEGATED.sub(" ", cleaned))
     if hit:
         raise MediaError(f"prompt rejected: it asks for real-person imitation ('{hit.group(0)}')")
     return cleaned
@@ -286,6 +291,7 @@ def generate_images(
     *,
     run_id: str | None = None,
     client: httpx.Client | None = None,
+    aspect_ratio: str | None = None,
 ) -> list[MediaFile]:
     """Generate one image per prompt. prompts[0] is the reference portrait unless `reference` is supplied.
 
@@ -317,7 +323,7 @@ def generate_images(
             if budget.spent_usd + budget.usd_per_image > budget.limit_usd + 1e-9:
                 raise MediaError(f"budget guard: stopping at ${budget.spent_usd:.3f} of ${budget.limit_usd:.2f}", files)
             try:
-                data, cost = _request_image(http, api_key, model, prompt, current)
+                data, cost = _request_image(http, api_key, model, prompt, current, aspect_ratio)
                 budget.spent_usd += cost if cost is not None else budget.usd_per_image
                 files.append(_save(run_id, index, data, prompt, cost))
             except httpx.HTTPError as error:

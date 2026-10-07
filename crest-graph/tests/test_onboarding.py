@@ -96,8 +96,8 @@ def test_offers_json_shape_has_onboarding_and_no_analyze():
     titles = [offer["title"] for offer in offers]
     assert not any(title.startswith("Analyze") for title in titles)
     assert all("[stage:analyze]" not in offer["prompt"] for offer in offers)
-    assert titles[-1] == "Onboarding: Build Your Virtual Avatar"
-    card = offers[-1]
+    assert titles[0] == "Onboarding: Build Your Virtual Avatar"
+    card = offers[0]
     assert card["prompt"].startswith("[stage:onboarding]")
     for field in ("Name / handle", "Niche", "5 interests", "Values", "story", "Expertise", "Signature phrases", "Likes / dislikes",
                   "Audience", "Moat", "Boundaries", "Look preferences", "Voice preferences"):

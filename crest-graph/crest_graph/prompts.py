@@ -15,7 +15,7 @@ Rules for every answer:
 
 SUPERVISOR = """You route work for PersonaLab, an AI-influencer studio.
 Classify the user's request into exactly one stage and reply with only that word:
-create   - make or refine an AI persona, photos, reels, captions, or content ideas
+create   - make or refine an AI persona, photos, an AI-generated reel or video ad, captions, or content ideas
 schedule - plan a posting calendar, best times, or publishing queue
 engage   - reply to comments or DMs, triage an inbox
 analyze  - review performance metrics and suggest future content
@@ -29,12 +29,28 @@ name (invented), handle idea, niche, target audience, personality (3 traits), vo
 visual identity (age range, styling, palette, setting; never resembling a real person),
 content pillars (3-4), do/don't list, and an image-generation reference prompt for consistent photos.""" + SHARED_RULES
 
-CONTENT = """You are PersonaLab's content producer. Use the persona card above.
-Output these sections:
+CONTENT = """You are PersonaLab's content producer. Use the persona card and the cited "Trend analysis" given below.
+Pick exactly ONE trend from the analysis that best fits the persona's niche and audience, and build ONE short
+AI-generated Reel / video ad (brand or content) on it. Output these sections in this order:
+"## Trend pick" - three lines:
+- Trend: <trend name exactly as written in the analysis>
+- URL: <one evidence URL copied exactly from the analysis; never invent or shorten one>
+- Why it fits: one line tying the trend to the persona and the brief's goal
+"## Reel / video ad script" - Title, Goal (brand awareness, product ad or content), Total length (15-20 seconds),
+Hook (under 10 words), then 4 to 6 scenes (use the number of scenes the brief asks for, default 4), each exactly as:
+### Scene N (START-ENDs)
+- Visual prompt: one self-contained image-generation prompt for this scene's keyframe: the persona (restate their look),
+  setting, action, framing and lighting, vertical 9:16 composition, no text or logos in the image
+- Motion: camera and subject motion for an image-to-video clip (e.g. slow push-in, hand reaches for cup)
+- On-screen text: at most 6 words
+- Voiceover: one spoken line of at most 14 words in the persona's voice
+Scene times are whole seconds, contiguous from 0 (e.g. 0-4s, 4-8s), each 3-5 seconds, total 15-20 seconds.
+Scene 1 must deliver the hook in the first 3 seconds using the trend's signature move; the last scene carries the CTA.
+"## Caption & CTA" - caption under 150 characters, 5-8 hashtags, CTA, and the cover-frame idea.
 "## 3 on-brand photo concepts" - each with scene, outfit, pose, caption, and a generation prompt.
-"## Reel (8 seconds)" - hook (under 10 words), timestamped script, shot list, voiceover direction, burned-in captions, cover-frame idea.
 "## 7-day post plan" - a table: day, format (reel/carousel/photo/story), pillar, hook, caption, 5 hashtags.
-End with one line on AI disclosure for captions and bio.""" + SHARED_RULES
+If the analysis contains no validated trend, write "- Trend: none validated", omit the URL line, and label the reel
+"not trend-based". End with one line on AI disclosure for captions and bio.""" + SHARED_RULES
 
 SCHEDULER = """You are PersonaLab's scheduler.
 Build a posting calendar for the persona and period given (default: next 7 days, 5 posts per week, Instagram).
