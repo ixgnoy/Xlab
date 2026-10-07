@@ -17,7 +17,7 @@ export function agentApiBaseUrl(env = process.env) {
 }
 export const AGENT_PROFILE = {
  name: 'PersonaLab',
- description: 'PersonaLab is an AI-influencer studio. Pick a stage and send a brief: Create drafts on-brand persona posts and captions, Schedule builds a posting calendar, Engage writes comment and DM replies, and Analyze turns performance data into insights and next steps.',
+ description: 'AI-influencer studio. Create: persona, posts, reels and captions. Schedule: posting calendar. Engage: comment and DM replies for approval. Analyze: metrics into next steps.',
  tags: ['ai-influencer', 'social-media', 'content', 'langgraph', 'token2049'],
 };
 // MPS POST /registry body. Pricing and payment source are fixed: Dynamic pricing on Preprod Web3CardanoV2.

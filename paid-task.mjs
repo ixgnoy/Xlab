@@ -4,6 +4,8 @@ import {parseEnv} from 'node:util';
 import {verifySettlement} from './settlement.mjs';
 import {loadSokosumiRuntime} from './sokosumi-runtime.mjs';
 const MINUTE=60*1000;
+// Payment windows in minutes. Core's buyer needed more than 5 minutes to lock escrow for a freshly registered agent.
+const W={payBy:Number(process.env.PAID_PAY_BY_MIN??15),submit:Number(process.env.PAID_SUBMIT_MIN??40),unlock:Number(process.env.PAID_UNLOCK_MIN??56),dispute:Number(process.env.PAID_DISPUTE_MIN??72)};
 export const USDM='16a55b2a349361ff88c03788f93e1e966e5d689605d044fef722ddde0014df10745553444d';
 export function taskHash(text){return createHash('sha256').update(text,'utf8').digest('hex')}
 export function confirmedState(payment,expected){
@@ -54,7 +56,7 @@ export async function createPaidAdapter({save,answer,core:providedCore,mps:provi
    const nonce=randomBytes(10).toString('hex');const now=Date.now();
    const body={network:'Preprod',agentIdentifier:r.agentIdentifier,paymentSourceType:'Web3CardanoV2',supportedPaymentSourceIndex:r.supportedPaymentSourceIndex,
     inputHash:taskHash(state.input),identifierFromPurchaser:nonce,RequestedFunds:[{amount:'1000000',unit:USDM}],
-    payByTime:new Date(now+5*MINUTE).toISOString(),submitResultTime:new Date(now+20*MINUTE).toISOString(),unlockTime:new Date(now+36*MINUTE).toISOString(),externalDisputeUnlockTime:new Date(now+52*MINUTE).toISOString(),metadata:JSON.stringify({taskId:task.id})};
+    payByTime:new Date(now+W.payBy*MINUTE).toISOString(),submitResultTime:new Date(now+W.submit*MINUTE).toISOString(),unlockTime:new Date(now+W.unlock*MINUTE).toISOString(),externalDisputeUnlockTime:new Date(now+W.dispute*MINUTE).toISOString(),metadata:JSON.stringify({taskId:task.id})};
    if(!body.agentIdentifier||!Number.isInteger(body.supportedPaymentSourceIndex))throw new Error('Registration identifier and source index are required');
    state=await persist(task,state,{stage:'terms-pending',nonce,request:body});
    const payment=await mps('/api/v1/payment',body);
