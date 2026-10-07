@@ -76,6 +76,7 @@ LENSES: tuple[Lens, ...] = (
     ),
 )
 SCRIPT_LENS_ORDER = ("tiktok_creative_center", "instagram_reels", "niche", "press", "search_interest")
+CREATE_LENS_ORDER = ("niche", "instagram_reels", "tiktok_creative_center", "press", "search_interest")
 
 
 # ---------------------------------------------------------------- search tool
@@ -418,6 +419,7 @@ class TrendState(TypedDict, total=False):
     findings: Annotated[list[dict], operator.add]
     trends: list[dict]
     trend_report: str
+    trend_cost: float
 
 
 class ResearchTask(TypedDict):
@@ -428,6 +430,8 @@ class ResearchTask(TypedDict):
 
 
 def swarm_size(stage: str | None) -> int:
+    if stage == "create":  # small swarm feeding the Create reel; 0 disables it
+        return _int("TREND_CREATE_SWARM_SIZE", 2, 0, MAX_SWARM)
     if stage == "scripts":
         return _int("TREND_SCRIPTS_SWARM_SIZE", 3, 1, MAX_SWARM)
     return _int("TREND_SWARM_SIZE", 5, 1, MAX_SWARM)
@@ -435,7 +439,8 @@ def swarm_size(stage: str | None) -> int:
 
 def pick_lenses(stage: str | None, size: int) -> list[Lens]:
     by_id = {lens.id: lens for lens in LENSES}
-    order = [by_id[i] for i in SCRIPT_LENS_ORDER] if stage == "scripts" else list(LENSES)
+    named = {"scripts": SCRIPT_LENS_ORDER, "create": CREATE_LENS_ORDER}.get(stage or "")
+    order = [by_id[i] for i in named] if named else list(LENSES)
     picked = order[: min(size, len(order))]
     extra = size - len(picked)  # more agents than lenses: repeat the niche lens with a different angle
     picked += [Lens(f"niche_{i + 2}", f"Niche lens {i + 2}", by_id["niche"].focus + f" Angle {i + 2}: sub-niches and adjacent audiences.") for i in range(max(0, extra))]
@@ -499,7 +504,8 @@ def build_trend_graph(searcher: Searcher | None = None, page_fetcher: PageFetche
         report = render(trends, findings, today=today, brief=_brief(state))
         for trend in trends:
             trend["platforms"] = sorted(trend.get("platforms", []))
-        return {"trends": trends, "trend_report": report}
+        cost = round(sum(f.get("cost", 0.0) for f in findings), 5)
+        return {"trends": trends, "trend_report": report, "trend_cost": cost}
 
     graph = StateGraph(TrendState)
     graph.add_node("researcher", researcher)

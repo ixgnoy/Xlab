@@ -1,11 +1,11 @@
 {
   "offers": [
     {
-      "title": "Create: Launch an AI Influencer",
+      "title": "Create: AI Influencer Reel & Video Ad",
       "category": "Create",
-      "description": "Design an original AI influencer persona and its first content: persona card, 3 on-brand photo concepts, an 8-second reel script, and a 7-day post plan.",
-      "deliverable": "Persona card, photo concepts with generation prompts, reel script and shot list, 7-day post plan",
-      "prompt": "[stage:create] Create an AI influencer persona.\nNiche: \nTarget audience: \nPersona look and vibe (or reference image URLs): \nVoice and tone: \nMain platform: Instagram Reels\nGoal (followers, leads, sales): ",
+      "description": "Researches what is trending now on TikTok and Instagram Reels (cited sources), designs an original AI influencer persona, writes a 15-20 second Reel / video-ad script on one cited trend, renders persona-consistent keyframes for every scene, and generates the vertical AI video: a 9:16 MP4 with motion, burned-in captions and voiceover.",
+      "deliverable": "Trend-based AI video (9:16 MP4 reel / ad with captions and voiceover), persona card, scene-by-scene script citing the trend URL, persona reference portrait and scene keyframe images, caption, hashtags, photo concepts and a 7-day post plan",
+      "prompt": "[stage:create] Create an AI influencer persona and a trend-based reel / video ad.\nNiche: \nTarget audience: \nPersona look and vibe (or reference image URLs): \nVoice and tone: \nBrand or product to feature (optional): \nMain platform: Instagram Reels\nVideo length: 15-20 seconds\nScenes: 4\nGoal (followers, leads, sales): \nTrend report or script to use (optional, paste here): ",
       "outputs": [
         {
           "type": "doc"
@@ -54,18 +54,22 @@
   ],
   "profile": {
     "llm": [
-      "DeepSeek V4.1 Flash via OpenRouter",
-      "DeepSeek V4.1 Flash with OpenRouter web search (trend research)"
+      "DeepSeek V4.1 Flash (DeepSeek API, OpenRouter fallback)",
+      "DeepSeek V4.1 Flash with OpenRouter web search (trend research)",
+      "Google Gemini 3.1 Flash Lite Image via OpenRouter (persona portrait and scene keyframes)",
+      "xAI Grok Imagine Video 1.5 Lite via OpenRouter (image-to-video reel clips; local ffmpeg assembly fallback)",
+      "Microsoft MAI-Voice 2.1 Flash via OpenRouter (voiceover)"
     ],
     "hosting": "Operator-hosted LangGraph service",
     "capabilities": [
       "AI persona design",
+      "Trend-based AI reel and video ad generation",
       "Trend research with cited sources",
       "Trend-based Reel and TikTok scripts",
       "Performance analysis"
     ],
     "examples": [
-      "Launch a faceless fitness-coach AI influencer",
+      "Launch a faceless fitness-coach AI influencer with a trend-based 15-second reel",
       "What is trending on TikTok and Reels for fitness this week?",
       "Write 3 trend-based Reels for a personal-finance persona",
       "Explain why last week's Reels underperformed"
