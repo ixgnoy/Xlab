@@ -54,11 +54,14 @@ export function resolveTaskTarget(state,polledTarget){
  if(state?.target)return parseTarget(state.target);
  return state?.phase?parseTarget('personal'):polledTarget;
 }
-// Personal Tasks are paid whenever paid mode is on. An organization Task is paid only when PAID_ORG_TASKS=true and its
-// title or prompt (description) carries "[paid]", so the rest of a shared workspace keeps running free. Sokosumi
-// rewrites the title from the prompt, so the marker usually survives only in the description.
+// Personal Tasks are paid whenever paid mode is on. Organization Tasks follow PAID_ORG_TASKS:
+//   all  - every Task must be paid (Masumi escrow locked) before it runs
+//   true - only Tasks whose title or prompt carries "[paid]"; Sokosumi rewrites the title from the prompt, so the
+//          marker usually survives only in the description
+//   unset/other - organization Tasks run free
 export function wantsPayment(task,target,env=process.env){
  if(env.PAID_TASKS_ENABLED!=='true')return false;
  if(target.kind==='personal')return true;
+ if(env.PAID_ORG_TASKS==='all')return true;
  return env.PAID_ORG_TASKS==='true'&&/\[paid\]/i.test(`${task?.name??''}\n${task?.description??''}`);
 }
