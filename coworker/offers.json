@@ -1,9 +1,9 @@
 {
   "offers": [
     {
-      "title": "Onboarding: Build Your Virtual Avatar",
+      "title": "Step 1 · Onboarding: Build Your Virtual Avatar",
       "category": "Onboarding",
-      "description": "Builds a virtual avatar of you, the real creator, from your interests, values, story, expertise and moat, so your audience feels it is personal and authentic rather than a generic bot. Includes voice, visual identity, positioning, AI-disclosure guardrails, first video ideas and a reusable Avatar JSON for later Create and Script tasks.",
+      "description": "Builds a virtual avatar of you, the real creator, from your interests, values, story, expertise and moat, so your audience feels it is personal and authentic rather than a generic bot. Includes voice, visual identity, positioning, AI-disclosure guardrails, first video ideas and a reusable Avatar JSON for later Create and Script tasks. Next: run Step 2 Trends, then Step 3 Script, then Step 4 Create.",
       "deliverable": "Avatar profile, voice and speaking style, visual identity with reference prompt, moat and positioning, authenticity guardrails, content pillars with 5 video ideas, reusable Avatar JSON",
       "prompt": "[stage:onboarding] Build my virtual avatar.\nName / handle: \nNiche: \n5 interests: \nValues: \nPersonal story / origin: \nExpertise (only what is true): \nSignature phrases or humor style: \nLikes / dislikes: \nAudience: \nMoat (your unfair advantage): \nBoundaries (topics to avoid): \nLook preferences (style, palette; not a photo of anyone else; say if the look may be inspired by you): \nVoice preferences (tone, pace, accent): ",
       "outputs": [
@@ -13,41 +13,41 @@
       ]
     },
     {
-      "title": "Create: AI Influencer Reel & Video Ad",
+      "title": "Step 2 · Trends: What's Hot on TikTok & Reels",
+      "category": "Trends",
+      "description": "A swarm of parallel research agents checks TikTok Creative Center, Instagram creator sources, marketing press, search-interest signals and your niche, then ranks the hottest short-form video trends with links and stated figures only. No account access needed.",
+      "deliverable": "Ranked trend table with evidence links, evidence log, how-to-use notes per top trend, method and limits",
+      "prompt": "[stage:trends] Find what is hot right now in short-form video.\nNiche: \nRegion: Global\nTime window: last 7 days\nPlatforms: TikTok and Instagram Reels\nPaste your Avatar JSON from Step 1 (optional): ",
+      "outputs": [
+        {
+          "type": "doc"
+        }
+      ]
+    },
+    {
+      "title": "Step 3 · Script: Trend-based Reels & TikToks",
+      "category": "Script",
+      "description": "Researches what is trending right now on TikTok and Instagram Reels for your niche (cited sources), then writes production-ready short-video scripts tied to those trends: 0-3s hook, timestamped beats, on-screen text, voiceover, shot list, sound reference, caption, hashtags, CTA and TikTok vs Reels variants.",
+      "deliverable": "Trend-linked short-video scripts with hooks, beats, shot lists, captions and platform variants, plus the cited trend analysis",
+      "prompt": "[stage:scripts] Write trend-based short-video scripts.\nNiche: \nTarget audience: \nPlatform: TikTok and Instagram Reels\nNumber of scripts: 3\nTarget length: 20-35 seconds\nTone:\nPaste your Avatar JSON from Step 1 (optional):\nPaste the trend report from Step 2 (optional): ",
+      "outputs": [
+        {
+          "type": "doc"
+        }
+      ]
+    },
+    {
+      "title": "Step 4 · Create: AI Influencer Reel & Video Ad",
       "category": "Create",
       "description": "Researches what is trending now on TikTok and Instagram Reels (cited sources), designs an original AI influencer persona, writes a 15-20 second Reel / video-ad script on one cited trend, renders persona-consistent keyframes for every scene, and generates the vertical AI video: a 9:16 MP4 with motion, burned-in captions and voiceover.",
       "deliverable": "Trend-based AI video (9:16 MP4 reel / ad with captions and voiceover), persona card, scene-by-scene script citing the trend URL, persona reference portrait and scene keyframe images, caption, hashtags, photo concepts and a 7-day post plan",
-      "prompt": "[stage:create] Create an AI influencer persona and a trend-based reel / video ad.\nNiche: \nTarget audience: \nPersona look and vibe (or reference image URLs): \nVoice and tone: \nBrand or product to feature (optional): \nMain platform: Instagram Reels\nVideo length: 15-20 seconds\nScenes: 4\nGoal (followers, leads, sales): \nTrend report or script to use (optional, paste here): ",
+      "prompt": "[stage:create] Create an AI influencer persona and a trend-based reel / video ad.\nNiche: \nTarget audience: \nPersona look and vibe (or reference image URLs): \nVoice and tone: \nBrand or product to feature (optional): \nMain platform: Instagram Reels\nVideo length: 15-20 seconds\nScenes: 4\nGoal (followers, leads, sales): \nTrend report or script to use (optional, paste here):\nPaste your Avatar JSON from Step 1 (optional):\nPaste the trend report or chosen script from Steps 2-3 (optional): ",
       "outputs": [
         {
           "type": "doc"
         },
         {
           "type": "image"
-        }
-      ]
-    },
-    {
-      "title": "Script: Trend-based Reels & TikToks",
-      "category": "Script",
-      "description": "Researches what is trending right now on TikTok and Instagram Reels for your niche (cited sources), then writes production-ready short-video scripts tied to those trends: 0-3s hook, timestamped beats, on-screen text, voiceover, shot list, sound reference, caption, hashtags, CTA and TikTok vs Reels variants.",
-      "deliverable": "Trend-linked short-video scripts with hooks, beats, shot lists, captions and platform variants, plus the cited trend analysis",
-      "prompt": "[stage:scripts] Write trend-based short-video scripts.\nNiche: \nTarget audience: \nPlatform: TikTok and Instagram Reels\nNumber of scripts: 3\nTarget length: 20-35 seconds\nTone: ",
-      "outputs": [
-        {
-          "type": "doc"
-        }
-      ]
-    },
-    {
-      "title": "Trends: What's Hot on TikTok & Reels",
-      "category": "Trends",
-      "description": "A swarm of parallel research agents checks TikTok Creative Center, Instagram creator sources, marketing press, search-interest signals and your niche, then ranks the hottest short-form video trends with links and stated figures only. No account access needed.",
-      "deliverable": "Ranked trend table with evidence links, evidence log, how-to-use notes per top trend, method and limits",
-      "prompt": "[stage:trends] Find what is hot right now in short-form video.\nNiche: \nRegion: Global\nTime window: last 7 days\nPlatforms: TikTok and Instagram Reels",
-      "outputs": [
-        {
-          "type": "doc"
         }
       ]
     }
