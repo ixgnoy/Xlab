@@ -60,6 +60,5 @@ export function resolveTaskTarget(state,polledTarget){
 export function wantsPayment(task,target,env=process.env){
  if(env.PAID_TASKS_ENABLED!=='true')return false;
  if(target.kind==='personal')return true;
- return env.PAID_ORG_TASKS==='true'&&/\[paid\]/i.test(`${task?.name??''}
-${task?.description??''}`);
+ return env.PAID_ORG_TASKS==='true'&&/\[paid\]/i.test(`${task?.name??''}\n${task?.description??''}`);
 }
