@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+.local/
+node_modules/
+.eve/
+.workflow/
+.output/
+dist/
+__pycache__/
+.venv/
+.pytest_cache/
+*.pyc

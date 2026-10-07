@@ -1,0 +1,75 @@
+{
+  "offers": [
+    {
+      "title": "Create: Launch an AI Influencer",
+      "category": "Create",
+      "description": "Design an original AI influencer persona and its first content: persona card, 3 on-brand photo concepts, an 8-second reel script, and a 7-day post plan.",
+      "deliverable": "Persona card, photo concepts with generation prompts, reel script and shot list, 7-day post plan",
+      "prompt": "[stage:create] Create an AI influencer persona.\nNiche: \nTarget audience: \nPersona look and vibe (or reference image URLs): \nVoice and tone: \nMain platform: Instagram Reels\nGoal (followers, leads, sales): ",
+      "outputs": [
+        {
+          "type": "doc"
+        },
+        {
+          "type": "image"
+        }
+      ]
+    },
+    {
+      "title": "Schedule: Plan & Auto-Publish Reels",
+      "category": "Schedule",
+      "description": "Build a posting calendar with recommended times and a publishing queue for your AI influencer's Instagram Reels, photos and carousels.",
+      "deliverable": "Posting calendar with times, publishing queue and checklist",
+      "prompt": "[stage:schedule] Plan my posting schedule.\nPersona (name or short description): \nPosts per week: 5\nDate range: next 7 days\nTimezone: \nContent to schedule (ideas or links): \nAuto-publish approved posts (yes/no): no",
+      "outputs": [
+        {
+          "type": "sheet"
+        }
+      ]
+    },
+    {
+      "title": "Engage: Reply to Comments & DMs",
+      "category": "Engage",
+      "description": "Triage comments and DMs, draft on-brand replies in your persona's voice, and flag conversations a human should handle. Nothing is sent without approval.",
+      "deliverable": "Ranked inbox, draft replies, escalation list",
+      "prompt": "[stage:engage] Draft replies for my inbox.\nPersona voice: \nTopics to avoid: \nPaste comments and DMs (one per line, with @username): \n",
+      "outputs": [
+        {
+          "type": "doc"
+        }
+      ]
+    },
+    {
+      "title": "Analyze: Performance & Next Content",
+      "category": "Analyze",
+      "description": "Turn your post metrics into a KPI summary, explain top and bottom performers, score your hooks, and plan next week's content.",
+      "deliverable": "KPI report, top/bottom posts, hook scorecard, next week's plan",
+      "prompt": "[stage:analyze] Analyze my content performance.\nPersona: \nPeriod: last 7 days\nGoal metric (reach, followers, saves, leads): \nPaste post metrics (date, format, hook, views, reach, likes, comments, shares, saves, avg watch time): \n",
+      "outputs": [
+        {
+          "type": "pdf"
+        }
+      ]
+    }
+  ],
+  "profile": {
+    "llm": [
+      "DeepSeek V4.1 Flash via OpenRouter"
+    ],
+    "hosting": "Operator-hosted LangGraph service",
+    "capabilities": [
+      "AI persona design",
+      "Reel scripts and captions",
+      "Posting calendars",
+      "Comment and DM drafting",
+      "Performance analysis"
+    ],
+    "examples": [
+      "Launch a faceless fitness-coach AI influencer",
+      "Plan 5 Reels for next week",
+      "Draft replies to 10 comments",
+      "Explain why last week's Reels underperformed"
+    ]
+  },
+  "channels": {}
+}

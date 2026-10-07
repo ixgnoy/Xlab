@@ -1,0 +1,23 @@
+[project]
+name = "crest-graph"
+version = "0.1.0"
+description = "PersonaLab LangGraph supervisor: Create, Schedule, Engage, Analyze"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.142.2",
+    "langchain-core>=1.6.7",
+    "langchain-openai>=1.6.7",
+    "langgraph>=1.2.14",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

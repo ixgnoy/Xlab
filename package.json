@@ -1,0 +1,16 @@
+{
+  "name": "personalab-coworker",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env --env-file-if-exists=.env.local start.mjs",
+    "worker": "node --env-file-if-exists=.env --env-file-if-exists=.env.local worker.mjs",
+    "api": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --env-file-if-exists=.local/mps-runtime.env agent-api.mjs",
+    "test": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --test *.test.mjs",
+    "smoke": "node --env-file-if-exists=.env --env-file-if-exists=.env.local smoke.mjs",
+    "test:graph": "uv run --project crest-graph pytest -q crest-graph"
+  }
+}
