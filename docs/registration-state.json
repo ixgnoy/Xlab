@@ -1,0 +1,16 @@
+{
+  "provenance": "VERIFIED",
+  "sourceId": "cmuxxnjge0004f07k1e87u9zw",
+  "walletId": "cmuxxnjgk0009f07krhvc76qi",
+  "keyWritePending": false,
+  "runtimeKeyId": "cmuxxvmpr0000z47krnh0o1kt",
+  "keyEvidence": {
+    "canRead": true,
+    "canPay": true,
+    "canAdmin": false,
+    "NetworkLimit": [
+      "Preprod"
+    ],
+    "walletScopeEnabled": true
+  }
+}

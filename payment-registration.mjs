@@ -1,7 +1,9 @@
 import fs from 'node:fs';
-import { registrationUrl, requireSavedRuntimeToken } from './registration-config.mjs';
+import { registrationBody, requireSavedRuntimeToken } from './registration-config.mjs';
 const statePath = 'docs/registration-state.json';
-const payment = JSON.parse(fs.readFileSync('docs/payment-state.json'));
+const paymentStatePath = process.env.PAYMENT_STATE_PATH || 'docs/payment-state.json';
+if (!fs.existsSync(paymentStatePath)) throw Error(`${paymentStatePath} is missing: record PersonaLab's dedicated sourceId, walletId and sellerAddress first`);
+const payment = JSON.parse(fs.readFileSync(paymentStatePath));
 let state = fs.existsSync(statePath) ? JSON.parse(fs.readFileSync(statePath)) : {provenance:'VERIFIED', sourceId:payment.sourceId, walletId:payment.walletId};
 const save=()=>fs.writeFileSync(statePath,JSON.stringify(state,null,2));
 const base=process.env.MPS_URL+'/api/v1';
@@ -23,7 +25,7 @@ if(process.argv[2]==='key'){
  const sources=await request('/payment-source?take=100');
  const find=(x)=>{if(Array.isArray(x)){for(const y of x){const r=find(y);if(r)return r;}}else if(x&&typeof x==='object'){if(x.id===payment.sourceId)return x;for(const y of Object.values(x)){const r=find(y);if(r)return r;}}};
  const source=find(sources);if(!source||wallet.walletAddress!==payment.sellerAddress)throw Error('Dedicated source or wallet mismatch');
- const body={network:'Preprod',type:'Standard',sellingWalletVkey:wallet.walletVkey,supportedPaymentSources:[{chain:'Cardano',network:'Preprod',paymentSourceType:'Web3CardanoV2',address:source.smartContractAddress,pricing:{pricingType:'Dynamic'}}],ExampleOutputs:[],Tags:['hackathon','team-names'],name:'Hackathon Team Name Finder',description:'Suggests hackathon team names from a project topic and style.',Capability:{name:process.env.ZAI_MODEL,version:'1'},Author:{name:'Sandro Schaier'},apiBaseUrl:registrationUrl(process.env.AGENT_API_PORT)};
+ const body=registrationBody({walletVkey:wallet.walletVkey,smartContractAddress:source.smartContractAddress});
  state.registrationWritePending=true;state.request=body;save();
  const r=await request('/registry',body);state.registrationId=r.id;state.registrationWritePending=false;state.registration=r;save();console.log(JSON.stringify(r));
 }else{

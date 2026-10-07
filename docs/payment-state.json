@@ -1,0 +1,18 @@
+{
+  "provenance": "VERIFIED: MPS /payment-source and /wallet/list on 127.0.0.1:38127, 2026-10-07",
+  "mpsRevision": "99d94cf31cad168a74281494e79d5cc56f34838d",
+  "port": 38127,
+  "database": "docker token2049-postgres 127.0.0.1:5433/mps_hackathon",
+  "seedExit": 0,
+  "network": "Preprod",
+  "paymentSourceType": "Web3CardanoV2",
+  "sourceId": "cmuxxnjge0004f07k1e87u9zw",
+  "smartContractAddress": "addr_test1wzs4e6wc95hkwezlccjw9mdvq0r0rsgx6zk34avptga3ftgn37w4g",
+  "policyId": "67ab0c92c4ac1610895a1c965ee50aba41a8f1513b15240723b3bd0b",
+  "walletId": "cmuxxnjgk0009f07krhvc76qi",
+  "sellerAddress": "addr_test1qqz6wglg8mvv7f0hrplymhw57z0d5u2jjxt9wt4u4hfvaxsfun3y53q6xrjtzwfwnzgl2urpxtx449wh3nw28crrrdrssejnde",
+  "sellerVkey": "05a723e83ed8cf25f7187e4dddd4f09eda71529196572ebcadd2ce9a",
+  "sellerCollectionAddress": null,
+  "purchasingWalletId": "cmuxxnjgk0008f07kee2k3zd2",
+  "purchasingAddress": "addr_test1qr6zhek5l5ls5tasy54pfyl0g3zs4fmwvjxwe8kfmvukkxm37ecqrfkhdry03mv593wvx8pnxqsxcgf0cqs8tdrsjkmsh7jevf"
+}
