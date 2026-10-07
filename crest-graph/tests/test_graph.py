@@ -28,12 +28,13 @@ def test_stage_tag_parsing():
 
 def test_create_runs_persona_then_content():
     model = fake("## Persona card\nNova", "## Reel (8 seconds)\nhook")
-    out = build_graph(model).invoke({"input": "[stage:create] fitness coach persona"})
+    out = build_graph(model, image_generator=lambda *a, **k: []).invoke({"input": "[stage:create] fitness coach persona"})
     assert out["stage"] == "create"
     assert len(model.calls) == 2
     assert "Nova" in model.calls[1][1].content  # content agent sees the persona card
     assert out["output"].startswith("# PersonaLab - Create")
     assert "## Persona card" in out["output"] and "## Reel" in out["output"]
+    assert "## Generated media" in out["output"]  # media_agent runs last on the Create path
 
 
 def test_each_tagged_stage_routes_without_classification():

@@ -1,15 +1,17 @@
 """Local HTTP front door for the PersonaLab graph. The Sokosumi worker calls POST /run."""
 import hmac
+import ipaddress
 import logging
 import uuid
 from functools import lru_cache
 
 import uvicorn
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.responses import FileResponse
 from langgraph.checkpoint.memory import InMemorySaver
 from pydantic import BaseModel, Field
 
-from . import config
+from . import config, media
 from .graph import STAGES, build_graph
 from .model import MissingModelConfig, chat_model
 
@@ -71,6 +73,28 @@ def run(request: RunRequest) -> RunResponse:
         log.error("Model turn failed: %s status=%s", type(error).__name__, getattr(error, "status_code", None))
         raise HTTPException(502, "Model turn failed") from None
     return RunResponse(stage=state["stage"], thread_id=thread_id, output=state["output"])
+
+
+def _is_loopback(host: str | None) -> bool:
+    try:
+        return ipaddress.ip_address((host or "").strip("[]")).is_loopback
+    except ValueError:
+        return False
+
+
+@app.get("/media/{run_id}/{name}")
+def media_file(run_id: str, name: str, request: Request) -> FileResponse:
+    # Loopback only: the files are local previews for the operator, never a public CDN.
+    if not _is_loopback(request.client.host if request.client else None):
+        raise HTTPException(403, "Media is served on loopback only")
+    path = media.resolve_media_file(run_id, name)
+    if path is None:
+        raise HTTPException(404, "Not found")
+    return FileResponse(
+        path,
+        media_type=media.EXT_MIME[path.suffix.lstrip(".")],
+        headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "private, max-age=3600"},
+    )
 
 
 def main() -> None:
