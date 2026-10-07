@@ -1,0 +1,11 @@
+.env
+.env.local
+.env.*
+!.env.example
+.local
+.claude
+node_modules
+crest-graph/.venv
+docs/demo
+docs/deck
+.git

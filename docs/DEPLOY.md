@@ -92,3 +92,18 @@ docker build -f deploy/node.Dockerfile -t personalab-node .
 
 Local behaviour is unchanged when none of these variables are set: loopback binds, `.local/` data, strict
 `http://127.0.0.1` graph URL, loopback-only media, and the OAuth CLI + OS vault for Sokosumi.
+
+## Live deployment (verified 2026-10-07)
+
+Sokosumi stays the only user interface (PersonaLab's 4 ready-to-run cards). The backend runs on Railway project `personalab`:
+
+| Service | Address | Notes |
+|---|---|---|
+| graph | https://graph-production-e6ee.up.railway.app (`/health`) · private `graph.railway.internal:8080` | Binds `0.0.0.0`: uvicorn on `::` disables dual-stack, so the IPv4 public edge returned 502 |
+| worker | no public port | `auth coworker-key`, polls personal + TOKEN2049 workspaces; the only executor (local worker stopped) |
+| agent-api | https://agent-api-production-78a3.up.railway.app (`/availability`) | Masumi MIP-003 Standard API |
+| mps | private `mps.railway.internal:3001` | Database migrated from the local node with the same encryption key; same wallets and registration; local node stopped |
+| Postgres | private | Restored with `pg_restore` through a temporary TCP proxy, deleted afterwards |
+
+Hosted proof: Task `01a11661-884f-7083-af8a-225f26881edc` (Trends) READY → RUNNING → COMPLETED with all laptop services stopped.
+Showcase page (optional, for judges): https://personalab-site.vercel.app
